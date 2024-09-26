@@ -1,4 +1,4 @@
-using OrdinaryDiffEq, StaticArrays
+using OrdinaryDiffEq
 
 N = 128
 u0 = 8 * ones(N)
