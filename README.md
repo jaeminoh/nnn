@@ -15,6 +15,7 @@ activate . # activate current env
 
 ## Paper
 
+- [[Proposal]]
 - [[DataAssimilation]]
 - [[KalmanFilter]]
 - [[Lorenz96]]
