@@ -1,6 +1,6 @@
 using FFTW
 using Plots, LaTeXStrings
-using LatentDA: kursiv
+using DALS: kursiv
 
 N = 256
 xx = LinRange(0, 32π, 256 + 1)[begin:end-1]

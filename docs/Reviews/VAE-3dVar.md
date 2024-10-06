@@ -91,3 +91,14 @@ p(x | y) \propto \exp\left(-\frac{1}{2} \left((x - x_b)^T B^{-1} (x - x_b) + (y 
 $$
 
 The maximum a posteriori (MAP) estimator is then the value of $ x $ that maximizes this posterior density. Thus, we have derived the basis for the 3D variational data assimilation method.
+
+
+## Proposals
+
+Here we provide some proposals.
+
+### Parametrize $x$ with neural networks.
+Assume that $\mathrm{dim}(y) \ll \mathrm{dim}(x)$. In this scenario, the main challenge in optimization is computing $(x - x_b)^T B^{-1} (x - x_b)$. By parametrizing $x_b$ and $x$ with $\theta_b$ and $\theta$, respectively, we can reduce the number of unknowns and leverage the ease of training neural networks. However, we have to model the error covariance matrix $B_\theta$: to minimize $J(\theta) = (\theta - \theta_b)^T B_\theta^{-1} (\theta - \theta_b) + (y - H(x_\theta))^T R^{-1} (y - H(x_\theta))$.
+
+### Add another penalty.
+Certain physical quantities, such as mass, momentum, and energy, must be conserved. However, an assimilated state $\hat{x}$ may not necessarily adhere to these conservation laws. It’s important to note that $x_b$ satisfies a specific set of conservation laws, as it is derived from solving the primitive equations. By introducing a penalty term like $\int x d\mu - \int x_b d\mu$, we may enhance the quality of the reanalysis.
