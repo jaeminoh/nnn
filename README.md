@@ -1,7 +1,8 @@
 # DALS: Data Assimilation in Latent Space
 
+
 ## How to execute?
-`git clone https://github.com/jaeminoh/latent_da.git`
+`git clone https://github.com/jaeminoh/latent_da.git`- [DALS: Data Assimilation in Latent Space](#dals-data-assimilation-in-latent-space)
 
 Install [Julia](https://julialang.org/downloads/)
 

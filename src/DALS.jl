@@ -6,9 +6,9 @@ export kursiv
 
 include("read_temperature.jl")
 export read_temperature
+export hourly_to_daily
 
-end # module Examples
-
+end
 
 #include("surrogate.jl")
 #export init
