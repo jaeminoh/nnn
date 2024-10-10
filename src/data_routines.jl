@@ -19,10 +19,11 @@ end
 """
 hourly data to daily data by taking mean.
 """
-function hourly_to_daily(temperature, time)
-    y = year(time[1])
+function read_daily_temperature(y::Int)
+    temperature, _, _, time = read_temperature(y, true)
+    @assert y == year(time[1])
     date = Date.(time)
-    days_of_year =  date |> Set |> collect |> sort # unique days
+    days_of_year = date |> Set |> collect |> sort # unique days
 
     # filter out yyyy-02-29
     condition = try
@@ -36,10 +37,34 @@ function hourly_to_daily(temperature, time)
     daily_t = zeros(Float32, size(temperature)[1:2]..., length(days_of_year)) # (64, 32, 365)
     for (i, day) in enumerate(days_of_year)
         indices = findall(date .== day)
-        _t = temperature[:,:,indices]
+        _t = temperature[:, :, indices]
         _t = mean(_t; dims=ndims(_t))
-        daily_t[:,:,i] .= _t[:,:,end]
+        daily_t[:, :, i] .= _t[:, :, end]
     end
 
     return daily_t, days_of_year
+end
+
+"""
+Normalization scheme: (x - μ) / σ
+Out:
+    - normalized temperature
+    - dates
+    - μ (mean)
+    - σ (std dev)
+"""
+function read_normalized_daily_temperature(ystart::Int, yend::Int)
+    yy = ystart:yend
+    data = read_daily_temperature.(yy)
+    tt = [x[1] for x in data]
+    dd = [x[2] for x in data]
+
+    tt = stack(tt, dims=4) # H, W, 365, yy
+    dd = stack(dd, dims=2)
+
+    μ = mean(tt; dims=4)
+    σ = std(tt; dims=4, mean=μ)
+
+    tt_std = @. (tt - μ) / σ
+    return tt_std, dd, μ, σ
 end

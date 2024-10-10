@@ -1,14 +1,14 @@
-using Lux, LuxCUDA, Random, Zygote, ComponentArrays, UnPack, Optimisers, ProgressBars
-using DALS: read_temperature
+using Lux, LuxCUDA, Random, Zygote, ComponentArrays, UnPack, Optimisers, ProgressBars, ParameterSchedulers
+using DALS: read_normalized_daily_temperature
 
-CUDA.device!(3)
+CUDA.device!(1)
 const gpu = gpu_device()
-println("setup gpu: $(gpu)")
 const cpu = cpu_device()
-yy = 1979:1990
-temp = cat(read_temperature.(yy)...; dims=3)
-temp = reshape(temp, 64, 32, 1, size(temp)[3]) |> Array{Float32} |> gpu
-println("load data: $(size(temp))")
+println("setup gpu: $(gpu)")
+
+tt, dd, μ, σ = read_normalized_daily_temperature(1979, 2018)
+tt = reshape(tt, size(tt)[1:2]..., 1, prod(size(dd))) |> Array{Float32} |> gpu
+println("load data: $(size(tt))")
 
 d_latent = 100
 
@@ -67,19 +67,25 @@ function compute_loss(params, x)
     x̂ = decode(z, θd)
     reconstruction_loss = sum(abs2, x̂ - x) / length(x)
     regularization_loss = sum(sum(μ .^ 2 .+ exp.(logvar) - logvar .- 1; dims=1) / 2) / length(x)
-    return reconstruction_loss + regularization_loss, x̂
+    return 1f3*reconstruction_loss + regularization_loss, x̂
 end
 
-function optimize(params, x, nepochs::Int=5000; η=1f-3)
+function optimize(params, x, nepochs::Int=5000; η=1.0f-3)
     loss_traj = []
     min_loss = Inf
     opt_state = Optimisers.setup(Optimisers.ADAM(η), params)
+    schedule = ParameterSchedulers.Stateful(CosAnneal(l0=η, l1=0, period=nepochs))
     opt_params = params
     pbar = tqdm(1:nepochs)
     for i in pbar
+        # update model
         (loss, x̂), back = pullback(p -> compute_loss(p, x), params)
         grad = back((1, nothing))[1]
-        opt_state, params = Optimisers.update(opt_state, params, grad)
+        opt_state, params = Optimisers.update!(opt_state, params, grad)
+        # update learning rate
+        lr = ParameterSchedulers.next!(schedule)
+        Optimisers.adjust!(opt_state, lr)
+
         if i % 100 == 0
             set_postfix(pbar, Loss=loss)
             push!(loss_traj, loss)
@@ -96,21 +102,21 @@ end
 
 println("Adam run...")
 t = @elapsed begin
-    opt_state, params, loss_traj = optimize(params, temp, 20000; η=1f-3)
+    opt_state, params, loss_traj = optimize(params, tt, 50000; η=1.0f-3)
 end
 println("Elapsed time: $(t)s")
 
-μ, logvar = encode(temp[:,:,:,1:1], params.θe)
+μ, logvar = encode(tt[:, :, :, 1:1], params.θe)
 x̂ = decode(μ, params.θd)
 
 using Plots
 plot(loss_traj, yaxis=:log10, legend=false, xlabel="100 iters")
 savefig("figures/learning_curve.pdf")
 
-heatmap(cpu(x̂)[:,:,1,1])
+heatmap(cpu(x̂)[:, :, 1, 1])
 savefig("figures/x_recon.pdf")
 
-heatmap(cpu(temp)[:,:,1,1])
+heatmap(cpu(tt[:, :, 1, 1]))
 savefig("figures/x_era5.pdf")
 
 using JLD2

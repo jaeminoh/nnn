@@ -4,9 +4,8 @@ include("problems.jl")
 export lorenz96!
 export kursiv
 
-include("read_temperature.jl")
-export read_temperature
-export hourly_to_daily
+include("data_routines.jl")
+export read_normalized_daily_temperature
 
 end
 
