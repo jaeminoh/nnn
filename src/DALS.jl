@@ -1,7 +1,7 @@
 module DALS
 
 include("problems.jl")
-export lorenz96!
+export lorenz96!, lorenz96
 export kursiv
 
 include("data_routines.jl")

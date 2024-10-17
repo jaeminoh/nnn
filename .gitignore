@@ -1,3 +1,9 @@
+*.txt
+*.pdf
+*.npz
+*.pyc
+__pycache__
+
 ERA5
 .html
 .pdf

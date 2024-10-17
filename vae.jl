@@ -1,4 +1,4 @@
-using Lux, LuxCUDA, Random, Zygote, ComponentArrays, UnPack, Optimisers, ProgressBars, ParameterSchedulers
+using Lux, LuxCUDA, Random, ComponentArrays, UnPack, Optimisers, ProgressBars, ParameterSchedulers, Zygote
 using DALS: read_normalized_daily_temperature
 
 CUDA.device!(1)
