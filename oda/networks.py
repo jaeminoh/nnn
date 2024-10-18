@@ -5,6 +5,7 @@ import jax.numpy as jnp
 import jax.random as jr
 import jax.tree_util as jtu
 from jaxtyping import PRNGKeyArray
+import jax
 
 
 class MultiLayerPerceptron(eqx.Module):
@@ -29,7 +30,7 @@ class MultiLayerPerceptron(eqx.Module):
     def __call__(self, *inputs):
         x = jnp.hstack(inputs)
         for layer in self.layers[:-1]:
-            x = jnp.tanh(layer(x))
+            x = jax.nn.gelu(layer(x))
         return self.layers[-1](x)
 
 
