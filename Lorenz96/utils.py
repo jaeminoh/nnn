@@ -18,11 +18,32 @@ def solve(solver_step, net, state, u0, yy, maxiter=5000):
     return opt_net, state
 
 
-def load_data(name: str, unroll_length: int, noise_level: int, seed: int = 0):
+def load_data(unroll_length: int, noise_level: int, seed: int = 0):
     np.random.seed(seed)
-    d = np.load(f"data/{name}.npz")
+    d = np.load("data/Tsit.npz")
     tt = d["tt"]
-    u0 = d["sol"][:, 0]
-    uu_ref = d["sol"][:, 1 : 1 + unroll_length]
+    Nt, Nx = d["sol"].shape
+
+    assert (Nt - 1) % unroll_length == 0, "unroll_length should divide (Nt-1)!"
+    N_traj = (Nt - 1) // unroll_length
+
+    u0 = np.zeros((N_traj, Nx))
+    uu_ref = np.zeros((N_traj, unroll_length, Nx))
+
+    for i in range(N_traj):
+        _start = unroll_length * i
+        u0[i] = d["sol"][_start]
+        uu_ref[i] = d["sol"][_start + 1 : _start + unroll_length + 1]
+
+    assert np.allclose(u0[1:], uu_ref[:-1, -1]), "index error!"
+
     yy = uu_ref + 0.01 * noise_level * np.random.randn(*uu_ref.shape)
     return tt, u0, uu_ref, yy
+
+
+def normalize(*arrays):
+    return [(array - 8) / 8 for array in arrays]
+
+
+def denormalize(*arrays):
+    return [(array * 8 + 8) for array in arrays]

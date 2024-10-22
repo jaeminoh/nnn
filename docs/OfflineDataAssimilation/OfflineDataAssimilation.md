@@ -57,3 +57,12 @@ L_k(\theta) = \Delta t^2\| f_\theta(u^k, y^{k+1}) \|_{B^{-1}}^2 + \left \| y^{k+
 $$
 
 where $u^{k+1}$ denotes the numerical solution without correction.
+
+
+## Thoughts
+
+- I believe that many researchers are already utilizing deep learning models to train prediction models, followed by the application of methods such as EnKF, 3D-Var, and 4D-Var.
+Given the availability of prediction models like FCN, PanguWeather, and NeuralGCM, it appears to be a promising approach to integrate data assimilation and evaluate performance.
+
+- However, as a latecomer in this field, I find it challenging to catch up and produce a paper at this time.
+I am contemplating a slightly different approach: maintaining the prediction model (Forward Euler) as fixed while employing deep learning techniques for data assimilation.

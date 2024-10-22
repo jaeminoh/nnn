@@ -1,11 +1,11 @@
 from typing import Union
 
 import equinox as eqx
+import jax
 import jax.numpy as jnp
 import jax.random as jr
 import jax.tree_util as jtu
 from jaxtyping import PRNGKeyArray
-import jax
 
 
 class MultiLayerPerceptron(eqx.Module):
@@ -30,8 +30,8 @@ class MultiLayerPerceptron(eqx.Module):
     def __call__(self, *inputs):
         x = jnp.hstack(inputs)
         for layer in self.layers[:-1]:
-            x = jax.nn.gelu(layer(x))
-        return self.layers[-1](x)
+            x = jax.nn.swish(layer(x))
+        return jax.nn.gelu(self.layers[-1](x))
 
 
 class Siren(eqx.Module):
@@ -55,6 +55,7 @@ class Siren(eqx.Module):
             for in_, out_, key in zip(layers[:-1], layers[1:], keys)
         ]
         self.w0 = jnp.array(w0)
+        self = siren_init(self, key)
 
     def __call__(self, x):
         for layer in self.layers[:-1]:
