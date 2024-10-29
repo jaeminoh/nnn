@@ -25,7 +25,7 @@ The primary goal of data assimilation is to derive high-quality initial conditio
 The 3D-Var approach seeks to minimize the following objective:
 
 $$
-J(u) = \|u - u_b\|_{B^{-1}}^2 + \|y - H(u)\|_{R^{-1}}^2.
+J(u_a) = \|u_a - u_f\|_{B^{-1}}^2 + \|y - H(u_a)\|_{R^{-1}}^2.
 $$
 
 Addressing this minimization problem in real time can be complex, prompting us to shift it to an offline setting. We can reformulate it as:
@@ -45,19 +45,22 @@ Upon minimizing this loss, the data assimilation process simplifies: we can comp
 Importantly, evaluating $L(\theta)$ does not necessitate repeated runs of the predictive model. Using forward Euler time discretization, we obtain:
 
 $$
-u^{k+1} = u^k + \Delta t \left( F(u^k, k\Delta t) + f_\theta(u^k, y^{k+1}) \right)
+u_f^{k+1} = u_a^k + \Delta t F(u_a^k),
 $$
 
-if $f_\theta$ is independent of $t$.
-
-Given this, we can reformulate our objective function for the assimilation problem as:
-
 $$
-L_k(\theta) = \Delta t^2\| f_\theta(u^k, y^{k+1}) \|_{B^{-1}}^2 + \left \| y^{k+1} - H\left(u^{k+1} + \Delta t f_\theta(u^k, y^{k+1})\right) \right \|_{R^{-1}}^2,
+u_a^{k+1} = u_f^{k+1} + \Delta t f_\theta(u_f^{k+1}, y^{k+1}),
 $$
 
-where $u^{k+1}$ denotes the numerical solution without correction.
+if $f_\theta$ is independent of $t$. **Note that another correction rule $f_\theta(u_a^k, y^{k+1})$ did not work well.**
 
+Given this, our optimization goal is to produce forecasts which fit observation data well. That is,
+
+$$
+L(\theta) = \sum_{k=1}^{N} \| y^{k} - H(u_f^{k})\|_{R}^2.
+$$
+
+We may add a penalty $\|x_a^{k+1} - x_f^{k+1}\|_B^2$ if we certain about our forecasting model, especially at $k+1$.
 
 ## Thoughts
 
@@ -66,3 +69,5 @@ Given the availability of prediction models like FCN, PanguWeather, and NeuralGC
 
 - However, as a latecomer in this field, I find it challenging to catch up and produce a paper at this time.
 I am contemplating a slightly different approach: maintaining the prediction model (Forward Euler) as fixed while employing deep learning techniques for data assimilation.
+
+- [[cde]]

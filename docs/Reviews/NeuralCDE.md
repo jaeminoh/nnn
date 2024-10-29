@@ -1,50 +1,29 @@
 # Neural Controlled Differential Equations
 
-Neural ordinary differential equations (NODEs) have a form of
+Neural Ordinary Differential Equations (NODEs) take the form:
 
 $$
-    \frac{dz}{dt} = f_\theta(z, t),
-$$
-which may be rewritten as
-
-$$
-    dz = f_\theta(z, t)dt.
+\frac{dz}{dt} = f_\theta(z, t),
 $$
 
-Neural CDE has a similar form:
+which can be rewritten as:
 
 $$
-    dz = f_\theta(z)dx.
+dz = f_\theta(z, t) dt.
 $$
 
-Here, $z$ is a hidden state vector, and $x$ is an observation.
-
-When a time series of $x = (x_{t_0}, \dots, x_{t_N})$  is given, NCDE first interpolates the series into a path $x: [t_0, t_N] \rightarrow \mathbb{R}^{d_x}$, and then solve $dz = f_\theta(z) dx$ by Riemann-Stiljes integral, or solve $dz = f_\theta(z) \frac{dx}{dt}dt$ if the path is differentiable in time.
-
-Forward Euler discretization of NCDE results in recurrent neural networks. So NCDE may be viewed as a continuous generalization of RNNs. Due to continuity, NCDE can deal with irregular time series too.
-
-Actually, our offline data assimilation format
+Neural Controlled Differential Equations (NCDEs) have a similar structure:
 
 $$
-    x^{k+1} = x^k + \Delta t F(x^k) + \Delta f_\theta(x^k, y^{k+1})
+dz = f_\theta(z) dx.
 $$
 
-is a special form of NCDE. Consider the following equation:
+Here, $z$ represents a hidden state vector, and $x$ is an observation.
+
+When given a time series $x = (x_{t_0}, \ldots, x_{t_N})$, the NCDE first interpolates the series into a path $x: [t_0, t_N] \rightarrow \mathbb{R}^{d_x}$ and then solves $dz = f_\theta(z) dx$ using a Riemann-Stieltjes integral. If the path is differentiable in time, it can also solve:
 
 $$
-    dx = F(x)dt + f_\theta(x)dy
+dz = f_\theta(z) \frac{dx}{dt} dt.
 $$
 
-a discretization derives
-
-$$
-    x^{k+1} - x^k = F(x^k)\Delta t + f_\theta(x^k) (y^{k+1} - y^k)
-$$
-
-or
-
-$$
-    x^{k+1} - x^k = F(x^k)\Delta t + f_\theta(x^k) \frac{dy^k}{dt}\Delta t.
-$$
-
-At first glance, $f_\theta(x^k, y^{k+1})$ seems more flexible, as it depends on $y^{k+1}$ in a nonlinear way.
+The Forward Euler discretization of NCDE yields recurrent neural networks, allowing NCDEs to be seen as a continuous generalization of RNNs. This continuity enables NCDEs to handle irregular time series effectively.

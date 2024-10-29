@@ -2,8 +2,6 @@
 
 Paper title: Data Assimilation Using a Variational Autoencoder
 
-For a brief overview of data assimilation, please refer to [[DataAssimilation]].
-
 - [Peer-reviewed](https://rmets.onlinelibrary.wiley.com/doi/10.1002/qj.4708?af=R)
 - [arXiv](https://arxiv.org/abs/2308.16073)
 

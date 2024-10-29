@@ -19,9 +19,6 @@ Configuration for reference solution:
 Time stepper: RK4;
 Time step: $\Delta t = 0.01$.
 
-Two figures present the results:
-[[lorenz96_t5.pdf]] up to $t=5$, and [[lorenz96_t200.pdf]] up to $t=200$.
-
 For generating the reference solution, consult with `lorenz96_ref.jl`.
 
 ## Data Assimilation

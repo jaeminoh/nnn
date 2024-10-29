@@ -1,6 +1,6 @@
 # Idea and Suggestion
 
-For method, please refer to [[OfflineDataAssimilation]].
+For method, please refer to [[OfflineDataAssimilation/index]].
 
 ## Inputs of the correction term
 

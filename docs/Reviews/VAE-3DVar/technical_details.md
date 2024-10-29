@@ -17,7 +17,7 @@ Both training and test data must be properly processed before being input into t
 ### Normalization
 Normalization is essential, particularly for the temperature field input, which is measured in Kelvin (around 290 K). Without proper normalization, the optimization process can become unstable, leading to poor reconstruction quality. For example:
 - True: [[x_era5.pdf]]
-- Reconstructed: [[x_recon_50K.pdf]]
+- Reconstructed: [[x_recon.pdf]]
 
 To standardize the temperature fields, we subtract the mean and divide by the standard deviation, calculated on a day-of-year basis. Let $d$ represent the day of the year. The standardization procedure is given by:
 
@@ -34,6 +34,7 @@ $$
 Once day-of-year statistics are computed, the destandardization process is straightforward.
 
 **Considerations:**
+
 - [ ] Clarify whether to use $Y$ or $Y-1$ in the denominator.
 - [ ] Address handling of February 29th.
 

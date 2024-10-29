@@ -1,7 +1,7 @@
 # Lorenz96
 
 - Model explanation: [[Lorenz96]]
-- Idea: [[OfflineDataAssimilation]]
+- Idea: [[OfflineDataAssimilation/index]]
 
 ## ToDo
 

@@ -4,8 +4,8 @@
 *.pyc
 
 ERA5
-.html
-.pdf
+*.html
+*.png
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
