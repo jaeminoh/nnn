@@ -34,6 +34,46 @@ class MultiLayerPerceptron(eqx.Module):
         return jax.nn.gelu(self.layers[-1](x))
 
 
+class TensorNet(eqx.Module):
+    net_u: eqx.nn.Conv1d
+    net_y: eqx.nn.Conv1d
+    linear: eqx.nn.Linear
+
+    def __init__(
+        self,
+        *,
+        d_in: Union[str, int] = 2,
+        d_out: Union[str, int] = "scalar",
+        rank: int = 32,
+        key: PRNGKeyArray = jr.key(4321),
+    ):
+        key1, key2, key3 = jr.split(key, 3)
+        self.net_u = eqx.nn.Conv1d(
+            in_channels=d_in,
+            out_channels=rank,
+            kernel_size=4,
+            stride=1,
+            padding="SAME",
+            padding_mode="circular",
+            key=key1,
+        )
+        self.net_y = eqx.nn.Conv1d(
+            in_channels=d_in,
+            out_channels=rank,
+            kernel_size=4,
+            stride=1,
+            padding="SAME",
+            padding_mode="circular",
+            key=key2,
+        )
+        self.linear = eqx.nn.Linear(rank, d_out, key=key3)
+
+    def __call__(self, u, y):
+        net_u = jax.nn.swish(self.net_u(u[:, None])).squeeze()
+        net_y = jax.nn.swish(self.net_y(y[:, None])).squeeze()
+        return jax.nn.swish(self.linear(net_u * net_y))
+
+
 class Siren(eqx.Module):
     layers: list
     w0: jnp.ndarray  # adpative activation function
@@ -57,7 +97,8 @@ class Siren(eqx.Module):
         self.w0 = jnp.array(w0)
         self = siren_init(self, key)
 
-    def __call__(self, x):
+    def __call__(self, *args):
+        x = jnp.hstack(args)
         for layer in self.layers[:-1]:
             x = jnp.sin(self.w0 * layer(x))
         return self.layers[-1](x)
