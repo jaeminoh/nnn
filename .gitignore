@@ -1,3 +1,4 @@
+*.eqx
 *.txt
 *.pdf
 *.npz
