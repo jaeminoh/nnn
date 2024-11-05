@@ -62,11 +62,15 @@ def load_ensembles(
     return tt, u0, uu_ref, yy
 
 
-def load_data(N: int, noise_level: int = 0, seed: int = 0):
+def load_data(N: int, noise_level: int = 0, seed: int = 0, is_train: bool = True):
     """
     Load reference solution and (simulated) noisy observation for `k=0, ..., N`.
     """
-    d = np.load("data/Tsit.npz")
+    if is_train:
+        d = np.load("data/Tsit.npz")
+    else:
+        d = np.load("data/Tsit_test.npz")
+
     tt = d["tt"][: N + 1]
     u0 = d["sol"][0]
     uu = d["sol"][1 : N + 1]
@@ -74,18 +78,9 @@ def load_data(N: int, noise_level: int = 0, seed: int = 0):
     return tt, u0, uu, yy
 
 
-def normalize(*arrays):
-    return [(array - 8) / 8 for array in arrays]
-
-
-def denormalize(*arrays):
-    return [(array * 8 + 8) for array in arrays]
-
-
 def visualize(
     uu: Solution,
     loss_traj,
-    noise_level: int = 0,
     fname: str = "base",
 ):
     uu_ref = uu.reference
@@ -127,6 +122,14 @@ def visualize(
 
     plt.tight_layout()
     plt.savefig(
-        f"results/{fname}_noise{noise_level}.png",
+        f"results/{fname}.png",
         dpi=300,
     )
+
+
+def normalize(*arrays):
+    return [(array - 8) / 8 for array in arrays]
+
+
+def denormalize(*arrays):
+    return [(array * 8 + 8) for array in arrays]

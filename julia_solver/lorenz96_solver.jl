@@ -11,10 +11,13 @@ tt = tspan[1]:dt:tspan[2]
 
 prob = ODEProblem(lorenz96!, u0, tspan)
 
-function generate_and_save(u0; t0::Int=0, t1::Int=308, dt::Float64=0.01)
-    prob = ODEProblem(lorenz96!, u0, (t0, t1))
-    sol = solve(prob, Tsit5();saveat=8:dt:t1)
+function generate_and_save(u0; t0::Int=0, t_tr::Int=308, t_te::Int=318, dt::Float64=0.01)
+    prob = ODEProblem(lorenz96!, u0, (t0, t_tr))
+    sol = solve(prob, Tsit5(); saveat=8:dt:t_tr)
     save_solution(sol, "Tsit")
+    prob = ODEProblem(lorenz96!, sol.u[end], (t_tr, t_te))
+    sol = solve(prob, Tsit5(); saveat=t_tr:dt:t_te)
+    save_solution(sol, "Tsit_test")
 end
 
 function solve_ensemble(u0, N_ensemble::Int; seed::Int=0, noise_level::Int=1)
