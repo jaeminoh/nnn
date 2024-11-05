@@ -1,7 +1,6 @@
-import diffrax as dfx
 import jax.numpy as jnp
-import numpy as np
-from jax.typing import ArrayLike
+
+
 
 
 def lorenz96(u0):
@@ -12,7 +11,7 @@ def lorenz96(u0):
     n__1 = jnp.mod(index - 1, N)
     return (u0[n_1] - u0[n__2]) * u0[n__1] - u0 + 8
 
-
+"""
 class Lorenz96:
     def __init__(self, *, Nx: int = 128):
         self.u0 = np.hstack([8.01, 8 * np.ones((Nx - 1,))])
@@ -39,3 +38,4 @@ class Lorenz96:
             stepsize_controller=dfx.PIDController(rtol=1e-8, atol=1e-8),
         )
         return solution.ys
+"""
