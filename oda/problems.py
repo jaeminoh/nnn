@@ -1,6 +1,6 @@
 import jax.numpy as jnp
-
-
+import numpy as np
+from jax.numpy.fft import irfft, rfft, rfftfreq
 
 
 def lorenz96(u0):
@@ -11,31 +11,13 @@ def lorenz96(u0):
     n__1 = jnp.mod(index - 1, N)
     return (u0[n_1] - u0[n__2]) * u0[n__1] - u0 + 8
 
-"""
-class Lorenz96:
-    def __init__(self, *, Nx: int = 128):
-        self.u0 = np.hstack([8.01, 8 * np.ones((Nx - 1,))])
+
+class Kursiv:
+    def __init__(self, Nx: int = 128, xl: float = 0.0, xr: float = 32 * np.pi):
         self.Nx = Nx
+        self.k = 2j * np.pi * rfftfreq(Nx, (xr - xl) / Nx)
 
-    def __call__(self, u0):
-        index = jnp.arange(self.Nx)
-        n_1 = jnp.mod(index + 1, self.Nx)
-        n__2 = jnp.mod(index - 2, self.Nx)
-        n__1 = jnp.mod(index - 1, self.Nx)
-        return (u0[n_1] - u0[n__2]) * u0[n__1] - u0 + 8
-
-    def solve(self, u0, ts: ArrayLike):
-        saveat = dfx.SaveAt(ts=ts)
-        prob = dfx.ODETerm(lambda t, y, args: self(y))
-        solution = dfx.diffeqsolve(
-            prob,
-            dfx.Tsit5(),
-            ts[0],
-            ts[-1],
-            None,
-            u0,
-            saveat=saveat,
-            stepsize_controller=dfx.PIDController(rtol=1e-8, atol=1e-8),
-        )
-        return solution.ys
-"""
+    def __call__(self, u):
+        linear = irfft((self.k**2 - self.k**4) * rfft(u), self.Nx)
+        nonlinear = -0.5 * irfft(self.k * rfft(u**2), self.Nx)
+        return linear + nonlinear

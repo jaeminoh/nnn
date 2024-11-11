@@ -83,13 +83,14 @@ class ConvNet(eqx.Module):
         *,
         d_in: Union[str, int] = 2,
         rank: int = 32,
+        kernel_size: int = 4,
         key: PRNGKeyArray = jr.key(4321),
     ):
         key1, key2 = jr.split(key)
         self.encoder = eqx.nn.Conv1d(
             in_channels=d_in,
             out_channels=rank,
-            kernel_size=4,
+            kernel_size=kernel_size,
             stride=1,
             padding="SAME",
             padding_mode="circular",
@@ -98,7 +99,7 @@ class ConvNet(eqx.Module):
         self.decoder = eqx.nn.ConvTranspose1d(
             in_channels=rank,
             out_channels=d_in,
-            kernel_size=4,
+            kernel_size=kernel_size,
             stride=1,
             padding="SAME",
             padding_mode="circular",
