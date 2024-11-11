@@ -3,13 +3,14 @@ import jax
 import jaxopt
 import numpy as np
 import optax
-from methods import Euler
-from utils import load_data, load_ensembles, solve, visualize
 
 from oda.data_containers import Solution
+from oda.methods import Euler
 from oda.networks import ConvNet
+from oda.problems import Kursiv
+from oda.utils import load_data, load_ensembles, solve, visualize
 
-euler = Euler()
+euler = Euler(Kursiv())
 
 
 def compute_loss(net, u0, yy):
@@ -34,7 +35,7 @@ def train(
     solver_step = jax.jit(solver.update)
 
     # train
-    _, u0, _, yy = load_ensembles(10, normalization=False, noise_level=noise_level)
+    _, u0, _, yy = load_ensembles("data/train.npz", 10, normalization=False, noise_level=noise_level)
     state = solver.init_state(net, u0, yy)
     net, state, loss_traj = solve(solver_step, net, state, u0, yy, maxiter=epoch)
 
@@ -46,11 +47,19 @@ def train(
 def test_on(set: str, noise_level, net, unroll_length: int = 60):
     if set == "test":
         tt, u0, uu_ref, yy = load_data(
-            unroll_length, noise_level=noise_level, seed=1, is_train=False
+            "data/test.npz",
+            unroll_length,
+            noise_level=noise_level,
+            seed=1,
+            is_train=False,
         )
     else:
         tt, u0, uu_ref, yy = load_data(
-            unroll_length, noise_level=noise_level, seed=1, is_train=True
+            "data/train.npz",
+            unroll_length,
+            noise_level=noise_level,
+            seed=1,
+            is_train=True,
         )
     uu_base = euler.solve(u0, tt)
     uu_f, uu_a = euler.unroll(net, u0, yy)
@@ -78,10 +87,11 @@ def main(
         loss_traj = np.ones((epoch // 100,))
 
     uu = test_on("train", noise_level, net, unroll_length=30)
-    visualize(uu, loss_traj, fname=fname+"_train")
+    visualize(uu, loss_traj, fname=fname + "_train")
 
     uu = test_on("test", noise_level, net, unroll_length=30)
-    visualize(uu, loss_traj, fname=fname+"_test")
+    visualize(uu, loss_traj, fname=fname + "_test")
+
 
 if __name__ == "__main__":
     import fire

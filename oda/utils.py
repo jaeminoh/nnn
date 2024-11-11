@@ -28,7 +28,7 @@ def solve(solver_step, net, state, *args, maxiter=5000):
     return opt_net, state, np.stack(loss_traj)
 
 
-def load_ensembles(
+def load_ensembles(fname: str,
     unroll_length: int = 50, normalization: bool = False, noise_level: int = 0, seed: int = 0
 ):
     """
@@ -36,7 +36,7 @@ def load_ensembles(
 
     For example, if unroll_length is 6, then `yy.shape` is `(N_traj, unroll_length, 128)`.
     """
-    d = np.load("data/train.npz")
+    d = np.load(fname)
     tt = d["tt"]
     uu = d["sol"]
     del d
@@ -62,15 +62,11 @@ def load_ensembles(
     return tt, u0, uu_ref, yy
 
 
-def load_data(N: int, noise_level: int = 0, seed: int = 0, is_train: bool = True):
+def load_data(fname:str, N: int, noise_level: int = 0, seed: int = 0, is_train: bool = True):
     """
     Load reference solution and (simulated) noisy observation for `k=0, ..., N`.
     """
-    if is_train:
-        d = np.load("data/train.npz")
-    else:
-        d = np.load("data/test.npz")
-
+    d = np.load(fname)
     tt = d["tt"][: N + 1]
     u0 = d["sol"][0]
     uu = d["sol"][1 : N + 1]

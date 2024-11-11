@@ -22,5 +22,5 @@ where $\epsilon_i \sim N(0, 1)$.
 The ensemble $\{u^i\}$ is created by solving the Lorenz96 model using the respective initial conditions.
 
 **Data Storage:**  
-Ensemble data is saved in `data/Tsit_ensemble.npz`.  
+Ensemble data is saved in `data/Tsit.npz`.  
 The array dimensions are $(K, N_t, N_x)$, where $K$ is the ensemble size, $N_t$ is the number of time steps, and $N_x$ is the vector length.
