@@ -10,3 +10,4 @@ class Solution:
     baseline: ArrayLike
     forecast: ArrayLike
     analysis: ArrayLike
+    observation: ArrayLike = None

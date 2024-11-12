@@ -10,7 +10,7 @@ from oda.networks import ConvNet
 from oda.problems import lorenz96
 from oda.utils import load_data, load_ensembles, solve, visualize
 
-euler = Euler(lorenz96)
+euler = Euler(lorenz96, dt=0.01)
 
 
 def compute_loss(net, u0, yy):
@@ -35,7 +35,9 @@ def train(
     solver_step = jax.jit(solver.update)
 
     # train
-    _, u0, _, yy = load_ensembles("data/Tsit.npz", 60, normalization=False, noise_level=noise_level)
+    _, u0, _, yy = load_ensembles(
+        "data/train.npz", 60, normalization=False, noise_level=noise_level
+    )
     state = solver.init_state(net, u0, yy)
     net, state, loss_traj = solve(solver_step, net, state, u0, yy, maxiter=epoch)
 
@@ -45,17 +47,12 @@ def train(
 
 
 def test_on(set: str, noise_level, net, unroll_length: int = 60):
-    if set == "test":
-        tt, u0, uu_ref, yy = load_data("data/Tsit.npz",
-            unroll_length, noise_level=noise_level, seed=1, is_train=False
-        )
-    else:
-        tt, u0, uu_ref, yy = load_data("data/Tsit_test.npz",
-            unroll_length, noise_level=noise_level, seed=1, is_train=True
-        )
+    tt, u0, uu_ref, yy = load_data(
+        f"data/{set}.npz", unroll_length, noise_level=noise_level, seed=1
+    )
     uu_base = euler.solve(u0, tt)
     uu_f, uu_a = euler.unroll(net, u0, yy)
-    uu = Solution(tt, uu_ref, uu_base, uu_f, uu_a)
+    uu = Solution(tt, uu_ref, uu_base, uu_f, uu_a, yy)
     return uu
 
 

@@ -62,7 +62,7 @@ def load_ensembles(fname: str,
     return tt, u0, uu_ref, yy
 
 
-def load_data(fname:str, N: int, noise_level: int = 0, seed: int = 0, is_train: bool = True):
+def load_data(fname:str, N: int, noise_level: int = 0, seed: int = 0):
     """
     Load reference solution and (simulated) noisy observation for `k=0, ..., N`.
     """
@@ -84,37 +84,47 @@ def visualize(
     uu_f = uu.forecast
     uu_a = uu.analysis
     tt = uu.tt
+    yy = uu.observation
 
     _, (axs0, axs1) = plt.subplots(ncols=3, nrows=2, figsize=(12, 8))
     plt.suptitle(fname)
 
-    titles = ["Forward Euler", "Forecast", "Analysis"]
+    titles = ["Forward Euler", "Forecast"]
     scale = abs(uu_ref).max()
     errors = (
-        np.stack([abs(uu_ref - uu_base), abs(uu_ref - uu_f), abs(uu_ref - uu_a)])
+        np.stack([abs(uu_ref - uu_base), abs(uu_ref - uu_f)])
         / scale
     )
-    vmax = errors[1:].max()
-    for ax, title, error in zip(axs0, titles, errors):
+    vmax = errors[1].max()
+    for ax, title, error in zip(axs0[:-1], titles, errors):
         ax.imshow(error, vmax=vmax, vmin=0, aspect="auto")
         ax.set_xlabel(r"$x$")
         ax.set_ylabel(r"$t$")
         ax.set_title(f"{title}, max: {error.max():.2e}")
 
-    indices = [0, 64]
-    for i, ax in zip(indices, axs1[:-1]):
-        ax.plot(tt[1:], uu_ref[:, i], label="Reference", linewidth=3)
-        #ax.plot(tt[1:], uu_base[:, i], "--", label="Baseline", linewidth=3)
-        ax.plot(tt[1:], uu_f[:, i], ":", label="Forecast", linewidth=3)
-        ax.set_xlabel(r"$t$")
-        ax.set_ylabel(r"$u(x_i)$")
-        ax.set_title(f"{i}th position")
-        ax.legend()
-
-    ax = axs1[-1]
+    ax = axs0[-1]
     ax.semilogy(loss_traj)
     ax.set_title(f"Learning Curve, min: {loss_traj.min():.3e}")
     ax.set_xlabel("100 Iterations")
+
+    indices = [0, 64]
+    for i, ax in zip(indices, axs1[:-1]):
+        ax.plot(tt[1:], uu_ref[:, i], label="Reference", linewidth=3)
+        ax.plot(tt[1:], uu_f[:, i], ":", label="Forecast", linewidth=2)
+        ax.set_xlabel(r"$t$")
+        ax.set_ylabel(r"$u(x_i)$")
+        ax.set_title(f"{i}th position")
+        
+    ax = axs1[-1]
+    ax.plot(tt[1:], uu_ref[:, 32], label="Reference", linewidth=3)
+    ax.plot(tt[1:], uu_f[:, 32], ":", label="Forecast", linewidth=2)
+    ax.plot(tt[1:], yy[:, 32], "--", label="Observation", linewidth=1)
+    ax.legend()
+    ax.set_xlabel(r"$t$")
+    ax.set_ylabel(r"$u(x_i)$")
+    ax.set_title(f"{32}th position")
+
+    
 
     plt.tight_layout()
     plt.savefig(

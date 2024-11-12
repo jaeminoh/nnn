@@ -18,6 +18,6 @@ class Kursiv:
         self.k = 2j * np.pi * rfftfreq(Nx, (xr - xl) / Nx)
 
     def __call__(self, u):
-        linear = irfft((self.k**2 - self.k**4) * rfft(u), self.Nx)
+        linear = irfft((- self.k**2 - self.k**4) * rfft(u), self.Nx)
         nonlinear = -0.5 * irfft(self.k * rfft(u**2), self.Nx)
         return linear + nonlinear
