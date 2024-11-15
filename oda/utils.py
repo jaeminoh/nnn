@@ -122,7 +122,7 @@ def visualize(
     ax.legend()
     ax.set_xlabel(r"$t$")
     ax.set_ylabel(r"$u(x_i)$")
-    ax.set_title(f"{32}th position")
+    ax.set_title(f"{32}nd position")
 
     
 

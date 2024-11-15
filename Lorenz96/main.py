@@ -63,7 +63,7 @@ def main(
     rank: int = 32,
     include_training: bool = True,
 ):
-    fname = f"ensembles_lr{lr0}_epoch{epoch}_noise{noise_level}_rank{rank}"
+    fname = f"lorenz_lr{lr0}_epoch{epoch}_noise{noise_level}_rank{rank}"
     print(fname)
 
     if include_training:

@@ -1,9 +1,10 @@
 *.eqx
-*.txt
 *.pdf
 *.npz
 *.pyc
 *.sh
+uv.lock
+*.mp4
 
 ERA5
 *.html

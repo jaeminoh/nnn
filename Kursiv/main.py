@@ -63,7 +63,7 @@ def main(
     rank: int = 32,
     include_training: bool = True,
 ):
-    fname = f"ensembles_lr{lr0}_epoch{epoch}_noise{noise_level}_rank{rank}"
+    fname = f"kursiv_lr{lr0}_epoch{epoch}_noise{noise_level}_rank{rank}"
     print(fname)
 
     if include_training:
@@ -79,6 +79,7 @@ def main(
     visualize(uu, loss_traj, fname=fname + "_train")
 
     uu = test_on("test", noise_level, net, unroll_length=1000)
+    uu.save(fname + "_test")
     visualize(uu, loss_traj, fname=fname + "_test")
 
 
