@@ -9,7 +9,18 @@
 3. install via pip: `pip install -e .`
 4. install dependencies: `pip install -r requirements.txt`
 
-### Examples
+## Examples
 1. `cd Lorenz96` or `cd Kursiv`
 1. To generate training and test data, run `python make_data.py` in each directory.
 2. Run `sh main.sh`
+
+### Kuramoto-Sivashinsky (Kursiv)
+
+Forward Euler:
+![](figures/kursiv_base.mp4)
+
+Noisy Observation:
+![](figures/kursiv_obs.mp4)
+
+Combination of both (Assimilation):
+![](figures/kursiv_assim.mp4)
