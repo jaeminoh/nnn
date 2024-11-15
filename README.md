@@ -17,10 +17,14 @@
 ### Kuramoto-Sivashinsky (Kursiv)
 
 Forward Euler:
-![](figures/kursiv_base.mp4)
+
+https://github.com/user-attachments/assets/4faa78eb-4b8d-4a5b-a0ba-abdeafc49ee6
 
 Noisy Observation:
-![](figures/kursiv_obs.mp4)
+
+https://github.com/user-attachments/assets/545467eb-1fd1-42f8-b4a8-510cca4d5350
 
 Combination of both (Assimilation):
-![](figures/kursiv_assim.mp4)
+
+https://github.com/user-attachments/assets/1d361c4e-edda-4dc7-a1f0-8ee741df9438
+
