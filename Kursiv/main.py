@@ -75,10 +75,10 @@ def main(
         net = eqx.tree_deserialise_leaves(f"results/{fname}.eqx", net)
         loss_traj = np.ones((epoch // 100,))
 
-    uu = test_on("train", noise_level, net, unroll_length=500)
+    uu = test_on("train", noise_level, net, unroll_length=1000)
     visualize(uu, loss_traj, fname=fname + "_train")
 
-    uu = test_on("test", noise_level, net, unroll_length=500)
+    uu = test_on("test", noise_level, net, unroll_length=1000)
     visualize(uu, loss_traj, fname=fname + "_test")
 
 

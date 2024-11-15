@@ -128,8 +128,8 @@ def visualize(
 
     plt.tight_layout()
     plt.savefig(
-        f"results/{fname}.png",
-        dpi=300,
+        f"results/{fname}.pdf",
+        format="pdf"
     )
 
 

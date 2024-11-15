@@ -8,3 +8,6 @@
 2. enter to the cloned repository
 3. install via pip: `pip install -e .` (or `uv pip install -e .`)
 4. Lorenz 96 example: `cd Lorenz96` and run `sh main.sh`
+
+### Examples
+To generate training and test data, run `python make_data.py` in each directory.
