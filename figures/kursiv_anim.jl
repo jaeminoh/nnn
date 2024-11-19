@@ -2,7 +2,8 @@ using Plots
 using NPZ
 using LaTeXStrings
 
-function animate(type::String; noise::Int=100, scale::Number=1)
+function animate(type::String; noise::Int=50, scale::Number=1)
+    scalefontsizes(scale)
     plot_font = "Computer Modern"
     default(fontfamily=plot_font,
         linewidth=3, framestyle=:box, label=nothing, grid=false)
@@ -42,8 +43,8 @@ function animate(type::String; noise::Int=100, scale::Number=1)
     println("Done!")
 end
 
-function draw()
+function draw(noise::Int=50)
     for f in ["baseline", "observation", "assimilation"]
-        animate(f, scale=1.2)
+        animate(f, noise=noise, scale=1.2)
     end
 end

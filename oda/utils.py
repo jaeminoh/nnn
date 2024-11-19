@@ -58,6 +58,7 @@ def load_ensembles(fname: str,
     if normalization:
         u0, uu_ref = normalize(u0, uu_ref)
 
+    u0 = add_noise(u0, noise_level=noise_level, seed=seed)
     yy = add_noise(uu_ref, noise_level=noise_level, seed=seed)
     return tt, u0, uu_ref, yy
 
@@ -68,7 +69,7 @@ def load_data(fname:str, N: int, noise_level: int = 0, seed: int = 0):
     """
     d = np.load(fname)
     tt = d["tt"][: N + 1]
-    u0 = d["sol"][0]
+    u0 = add_noise(d["sol"][0], noise_level=noise_level, seed=seed)
     uu = d["sol"][1 : N + 1]
     yy = add_noise(uu, noise_level=noise_level, seed=seed)
     return tt, u0, uu, yy
