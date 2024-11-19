@@ -79,6 +79,7 @@ def main(
     visualize(uu, loss_traj, fname=fname + "_train")
 
     uu = test_on("test", noise_level, net, unroll_length=1000)
+    uu.save(fname + "_test")
     visualize(uu, loss_traj, fname=fname + "_test")
 
 

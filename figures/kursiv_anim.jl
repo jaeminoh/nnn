@@ -3,7 +3,6 @@ using NPZ
 using LaTeXStrings
 
 function animate(type::String; noise::Int=50, scale::Number=1)
-    scalefontsizes(scale)
     plot_font = "Computer Modern"
     default(fontfamily=plot_font,
         linewidth=3, framestyle=:box, label=nothing, grid=false)
@@ -28,14 +27,16 @@ function animate(type::String; noise::Int=50, scale::Number=1)
     end
     # animate
     plot(xx, uu[1, :], label="Reference", lw=3,
-    legend=:outertop, legend_columns=-1, xlabel=L"x", ylabel=L"u",
-    ylims=(-4.5, 4.5), title="Time: $(tt[1])")
+        legend=:outertop, legend_columns=-1, xlabel=L"x", ylabel=L"u",
+        ylims=(-4.5, 4.5), title="Time: $(tt[1])")
     plot!(xx, ff[1, :], label=label, lw=3, linestyle=:dash)
-    anim = @animate for (i, t) ∈ enumerate(tt[2:end])
+    tt = tt[2:end]
+    ii = 4:4:length(tt)
+    anim = @animate for i in ii
         if i % 4 == 0
             plot(xx, uu[i, :], label="Reference", lw=3,
                 legend=:outertop, legend_columns=-1, xlabel=L"x", ylabel=L"u",
-                ylims=(-4.5, 4.5), title="Time: $(t)")
+                ylims=(-4.5, 4.5), title="Time: $(round(tt[i], digits=4))")
             plot!(xx, ff[i, :], label=label, lw=3, linestyle=:dash)
         end
     end
