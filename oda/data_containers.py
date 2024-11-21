@@ -6,6 +6,8 @@ from jaxtyping import ArrayLike
 
 @dataclass
 class Solution:
+    "This holds everything necessary for a visualization."
+
     tt: ArrayLike
     reference: ArrayLike
     baseline: ArrayLike

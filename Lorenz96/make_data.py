@@ -7,7 +7,7 @@ jax.config.update("jax_platform_name", "cpu")
 
 
 def main(Nx: int = 128, draw_plot: bool = False):
-    from oda.problems import lorenz96
+    from oda.problems import Lorenz96
 
     print(f"check precision: {jax.numpy.ones(()).dtype}")
     """
@@ -18,10 +18,11 @@ def main(Nx: int = 128, draw_plot: bool = False):
     u0[0] += 0.01
 
     # time steps
-    tt = np.arange(0, 318+0.01, 0.01)
+    tt = np.arange(0, 318 + 0.01, 0.01)
     saveat = dfx.SaveAt(ts=tt)
 
     # ode problem
+    lorenz96 = Lorenz96()
     prob = dfx.ODETerm(lambda t, u, args: lorenz96(u))
 
     # solve!
@@ -34,7 +35,7 @@ def main(Nx: int = 128, draw_plot: bool = False):
         y0=u0,
         saveat=saveat,
         stepsize_controller=dfx.PIDController(rtol=1e-9, atol=1e-9),
-        max_steps=int(1e6)
+        max_steps=int(1e6),
     )
     uu = sol.ys
     np.arange(0, 318 + 0.01, 0.01)

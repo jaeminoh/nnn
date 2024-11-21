@@ -7,6 +7,8 @@ from jaxtyping import PRNGKeyArray
 
 
 class ConvNet(eqx.Module):
+    "Circular padding if periodic spatial domain."
+
     encoder: eqx.nn.Conv1d
     decoder: eqx.nn.ConvTranspose1d
 

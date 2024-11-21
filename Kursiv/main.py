@@ -8,7 +8,7 @@ from oda.data_containers import Solution
 from oda.methods import Euler
 from oda.networks import ConvNet
 from oda.problems import Kursiv
-from oda.utils import load_data, load_ensembles, solve, visualize
+from oda.utils import DataLoader, solve, visualize
 
 euler = Euler(Kursiv(), dt=0.005, num_steps=50)
 
@@ -35,9 +35,8 @@ def train(
     solver_step = jax.jit(solver.update)
 
     # train
-    _, u0, _, yy = load_ensembles(
-        "data/train.npz", 10, normalization=False, noise_level=noise_level
-    )
+    data_loader = DataLoader(noise_level)
+    _, u0, _, yy = data_loader.load_train(unroll_length=10)
     state = solver.init_state(net, u0, yy)
     net, state, loss_traj = solve(solver_step, net, state, u0, yy, maxiter=epoch)
 
@@ -47,9 +46,8 @@ def train(
 
 
 def test_on(set: str, noise_level, net, unroll_length: int = 60):
-    tt, u0, uu_ref, yy = load_data(
-        f"data/{set}.npz", unroll_length, noise_level=noise_level, seed=1
-    )
+    data_loader = DataLoader(noise_level)
+    tt, u0, uu_ref, yy = data_loader.load_test(f"data/{set}.npz", unroll_length)
     uu_base = euler.solve(u0, tt)
     uu_f, uu_a = euler.unroll(net, u0, yy)
     uu = Solution(tt, uu_ref, uu_base, uu_f, uu_a, yy)
