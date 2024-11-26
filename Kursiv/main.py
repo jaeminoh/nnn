@@ -36,7 +36,7 @@ def train(
 
     # train
     data_loader = DataLoader(noise_level)
-    _, u0, _, yy = data_loader.load_train(unroll_length=10)
+    _, u0, _, yy = data_loader.load_train(unroll_length=20)
     state = solver.init_state(net, u0, yy)
     net, state, loss_traj = solve(solver_step, net, state, u0, yy, maxiter=epoch)
 
@@ -79,6 +79,8 @@ def main(
     uu = test_on("test", noise_level, net, unroll_length=1000)
     uu.save(fname + "_test")
     visualize(uu, loss_traj, fname=fname + "_test")
+
+    print(f"NRMSE: {np.linalg.norm(uu.forecast - uu.reference) / np.linalg.norm(uu.reference)}")
 
 
 if __name__ == "__main__":
