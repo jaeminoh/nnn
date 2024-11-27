@@ -13,7 +13,7 @@ import jax_cfd.base.grids as grids
 import jax_cfd.spectral as spectral
 import matplotlib.pyplot as plt
 import seaborn as sns
-import xarray
+import xarray as xr
 
 
 def initialize_vorticity(grid, max_velocity, seed: int = 42):
@@ -31,21 +31,20 @@ def add_noise(pure_quantity, scale: float, seed: int = 0):
     """
     Corrupt `pure_quantity` with mean zero Gaussian noise.
 
-    args:
-    - pure_quantity: to be corrupted
-    - scale: `pure_quantity + scale * z`
+    Return `pure_quantity + scale * z`, z ~ N(0, I)
     """
     return pure_quantity + scale * jr.normal(jr.key(seed), pure_quantity.shape)
 
 
-def main(num_grids: int = 256, noise_scale: int = 0):
+def main(num_grids: int = 64, noise_scale: int = 0):
     print(f"Kolmogorov Flow. Nx = {num_grids}, noise_scale = {noise_scale}")
-    fname = f"forced_turbulence_{num_grids}x{num_grids}"
+    fname = f"{num_grids}x{num_grids}"
     # physical parameters
-    viscosity = 1e-3
+    viscosity = 1e-2
     max_velocity = 7
-    grid = grids.Grid((256, 256), domain=((0, 2 * jnp.pi), (0, 2 * jnp.pi)))
+    grid = grids.Grid((num_grids, num_grids), domain=((0, 2 * jnp.pi), (0, 2 * jnp.pi)))
     dt = cfd.equations.stable_time_step(max_velocity, 0.5, viscosity, grid)
+    print(f"dt = {dt}")
 
     # setup step function using crank-nicolson runge-kutta order 4
     smooth = True  # use anti-aliasing
@@ -82,11 +81,12 @@ def main(num_grids: int = 256, noise_scale: int = 0):
         "x": spatial_coord,
         "y": spatial_coord,
     }
-    xarray.DataArray(
+    data = xr.DataArray(
         jnp.fft.irfftn(trajectory, axes=(1, 2)), dims=["time", "x", "y"], coords=coords
-    ).plot.imshow(col="time", col_wrap=5, cmap=sns.cm.icefire, robust=True)
-
+    )
+    data.plot.imshow(col="time", col_wrap=5, cmap=sns.cm.icefire, robust=True)
     plt.savefig(f"{fname}.pdf")
+    data.to_netcdf(f"{fname}.nc")
 
 
 if __name__ == "__main__":

@@ -5,6 +5,7 @@
 *.sh
 uv.lock
 *.mp4
+*.nc
 
 ERA5
 *.html
