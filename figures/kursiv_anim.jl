@@ -9,7 +9,7 @@ function animate(fname::String="figures/kursiv.mp4"; noise::Int=50, scale::Numbe
         size=(1200, 400), ylims=(-3.5,3.5), dpi=300, label=nothing,
         legend=:outertop, legend_columns=-1)
     scalefontsizes(scale)
-    result = npzread("Kursiv/results/kursiv_lr0.001_epoch200_noise$(noise)_rank256_test.npz")
+    result = npzread("Kursiv/results/kursiv_lr0.001_epoch200_noise$(noise)_rank128_test.npz")
     tt = result["tt"]
     uu = result["uu"]
     xx = LinRange(0, 32 * π, 129)[begin:end-1]

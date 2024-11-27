@@ -5,10 +5,9 @@ import numpy as np
 import optax
 
 from oda.data_containers import Solution
-from oda.methods import Euler
 from oda.networks import ConvNet
 from oda.problems import Lorenz96
-from oda.utils import DataLoader, solve, visualize
+from oda.utils import Euler, DataLoader, solve, visualize
 
 euler = Euler(Lorenz96(), dt=0.01)
 
