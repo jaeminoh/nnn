@@ -1,8 +1,11 @@
 import equinox as eqx
 import jax
 import jaxopt
+import matplotlib.pyplot as plt
 import numpy as np
 import optax
+import seaborn as sns
+import xarray as xr
 from make_data import CrankNicolsonRK4
 
 from oda.data_containers import Solution
@@ -77,13 +80,52 @@ def main(
 
     # uu = test_on("train", noise_level, net, unroll_length=1000)
 
-    uu = test_on("test", noise_level, net, unroll_length=100)
+    uu = test_on("test", noise_level, net, unroll_length=5000)
     # uu.save(fname + "_test")
     # visualize(uu, loss_traj, fname=fname + "_test")
 
     print(f"""NRMSE.
           w/o assimilation: {np.linalg.norm(uu.baseline - uu.reference) / np.linalg.norm(uu.reference)}
           w/  assimilation: {np.linalg.norm(uu.forecast - uu.reference) / np.linalg.norm(uu.reference)}""")
+
+    # transform the trajectory into real-space and wrap in xarray for plotting
+    tt = uu.tt[1:]
+    spatial_coord = np.arange(64) * 2 * np.pi / 64  # same for x and y
+    coords = {
+        "time": uu.tt[999::1000],
+        "x": spatial_coord,
+        "y": spatial_coord,
+    }
+
+    def plotting(type: str):
+        if type == "baseline":
+            d = uu.baseline
+        elif type == "observation":
+            d = uu.observation
+        elif type == "forecast":
+            d = uu.forecast
+        elif type == "reference":
+            d = uu.reference
+        elif type == "base_vs_ref":
+            d = uu.baseline - uu.reference
+        elif type == "obs_vs_ref":
+            d = uu.observation - uu.reference
+        elif type == "forecast_vs_ref":
+            d = uu.forecast - uu.reference
+        data = xr.DataArray(d[999::1000], dims=["time", "x", "y"], coords=coords)
+        data.plot.imshow(col="time", col_wrap=5, cmap=sns.cm.icefire, robust=True)
+        plt.savefig(f"results/{fname}_{type}.pdf")
+
+    for t in [
+        "baseline",
+        "observation",
+        "forecast",
+        "reference",
+        "base_vs_ref",
+        "obs_vs_ref",
+        "forecast_vs_ref",
+    ]:
+        plotting(t)
 
 
 if __name__ == "__main__":

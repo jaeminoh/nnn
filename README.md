@@ -37,6 +37,8 @@ https://github.com/user-attachments/assets/c94dee6f-509d-48c4-90a8-0b5eb80d7afd
 
 ### Kuramoto-Sivashinsky (Kursiv)
 
+<iframe width="560" height="315" src="https://www.youtube.com/embed/_IA0w4a4a84?si=flF_foGHj1IO7_5z" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+
 Forward Euler:
 
 
