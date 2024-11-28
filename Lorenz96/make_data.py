@@ -3,6 +3,7 @@ import jax
 import numpy as np
 
 jax.config.update("jax_enable_x64", True)
+print(f"Precision Check: {jax.numpy.ones(()).dtype}")
 jax.config.update("jax_platform_name", "cpu")
 
 

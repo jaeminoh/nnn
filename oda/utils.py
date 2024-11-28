@@ -1,9 +1,9 @@
-from functools import partial
-
+import equinox as eqx
 import jax
-import jax.numpy as jnp
+import jaxopt
 import matplotlib.pyplot as plt
 import numpy as np
+import optax
 from tqdm import trange
 
 from oda.data_containers import Solution
@@ -92,6 +92,15 @@ def _add_noise(target, noise_level: int = 0):
     return target + 0.01 * noise_level * np.random.randn(*target.shape)
 
 
+def test_on(set: str, solver, noise_level, net, unroll_length: int = 60):
+    data_loader = DataLoader(noise_level)
+    tt, u0, uu_ref, yy = data_loader.load_test(f"data/{set}.npz", unroll_length)
+    uu_base = solver.solve(u0, tt)
+    uu_f, uu_a = solver.unroll(net, u0, yy)
+    uu = Solution(tt, uu_ref, uu_base, uu_f, uu_a, yy)
+    return uu
+
+
 def visualize(
     uu: Solution,
     loss_traj,
@@ -143,55 +152,24 @@ def visualize(
     plt.savefig(f"results/{fname}.pdf", format="pdf")
 
 
-class InitialValueProblemUtil:
-    def __init__(self, dt: float = 0.01, inner_steps: int = 1):
-        self.dt = dt
-        self.inner_steps = inner_steps
+class Optimization:
+    def __init__(self, lr0: float = 1e-3, algorithm=optax.lion, epoch: int = int(2e2)):
+        lr = optax.cosine_decay_schedule(lr0, epoch)
+        self.epoch = epoch
+        self.algorithm = algorithm(lr)
 
-    def _step(self):
-        raise NotImplementedError
+    def train(self, fname: str, model, net, data):
+        "dynamical core, neural network, data, and optimizer"
+        solver = jaxopt.OptaxSolver(model.compute_loss, self.algorithm)
+        solver_step = jax.jit(solver.update)
 
-    def forecast(self, u0):
-        "Repeated application of the `_step` for `self.inner_steps` times."
-        for _ in range(self.inner_steps):
-            u0 = self._step(u0)
-        return u0
+        u0, yy = data
+        # train
+        state = solver.init_state(net, u0, yy)
+        net, state, loss_traj = solve(
+            solver_step, net, state, u0[:100], yy[:100], maxiter=self.epoch
+        )
 
-    def solve(self, u0, tt):
-        "Solve initial value problem following the time discretization `tt`."
-        ulist = [u0]
-        for _ in tt[1:] - tt[:-1]:
-            ulist.append(self.forecast(ulist[-1]))
-        return np.stack(ulist[1:])
-
-    def analysis(self, net, u_f, y):
-        """
-        Neural filtering (or correction) of forecast `u_f` based on observation `y`.
-        Returns analysis `u_a`.
-        """
-        return u_f + self.dt * self.inner_steps * net(u_f, y)
-
-    def _scan_fn(self, net, u0, y):
-        u_f = self.forecast(u0)
-        u_a = self.analysis(net, u_f, y)
-        return u_a, jnp.stack([u_f, u_a])
-
-    def unroll(self, net, u0, yy):
-        """
-        Fast (differentiable) for-loop for forecast and analysis.
-        Returns `u_f` and `u_a`.
-
-        The number of iterations, the number of rows of `out` and `yy` are the same.
-        """
-        _, out = jax.lax.scan(lambda u0, y: self._scan_fn(net, u0, y), u0, yy)
-        return out[:, 0], out[:, 1]  # u_f, u_a
-
-
-class Euler(InitialValueProblemUtil):
-    def __init__(self, problem, dt: float = 0.01, inner_steps: int = 1):
-        super().__init__(dt=dt, inner_steps=inner_steps)
-        self.problem = problem
-
-    @partial(jax.jit, static_argnums=0)
-    def _step(self, u0):
-        return u0 + self.dt * self.problem(u0)
+        # save checkpoint
+        eqx.tree_serialise_leaves(f"results/{fname}.eqx", net)
+        return net, loss_traj

@@ -1,4 +1,4 @@
-# Lorenz96
+# Kuramoto-Sivashinsky
 
 - Model explanation: [[KuramotoSivashinsky]]
 - Idea: [[OfflineDataAssimilation/index]]

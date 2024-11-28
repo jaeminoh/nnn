@@ -15,7 +15,6 @@ class ConvNet(eqx.Module):
     def __init__(
         self,
         *,
-        d_in: Union[str, int] = 2,
         rank: int = 32,
         kernel_size: int = 4,
         key: PRNGKeyArray = jr.key(4321),
