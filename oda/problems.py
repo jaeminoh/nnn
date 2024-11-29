@@ -1,7 +1,6 @@
 import jax
 import jax.numpy as jnp
 import numpy as np
-from jax.numpy.fft import irfft, rfft, rfftfreq
 
 
 class DynamicalCore:
@@ -104,11 +103,11 @@ class Kursiv(DynamicalCore):
         inner_steps=50,
     ):
         super().__init__(Nx=Nx, dt=dt, inner_steps=inner_steps)
-        self.k = 2j * np.pi * rfftfreq(self.Nx, (xr - xl) / self.Nx)
+        self.k = 2j * np.pi * jnp.fft.rfftfreq(self.Nx, (xr - xl) / self.Nx)
 
     def __call__(self, u):
-        linear = irfft((-(self.k**2) - self.k**4) * rfft(u), self.Nx)
-        nonlinear = -0.5 * irfft(self.k * rfft(u**2), self.Nx)
+        linear = jnp.fft.irfft((-(self.k**2) - self.k**4) * jnp.fft.rfft(u), self.Nx)
+        nonlinear = -0.5 * jnp.fft.irfft(self.k * jnp.fft.rfft(u**2), self.Nx)
         return linear + nonlinear
 
     def _step(self, u0):

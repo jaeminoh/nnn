@@ -6,7 +6,7 @@ import seaborn as sns
 import xarray as xr
 from make_data import KolmogorovFlow
 
-from oda.networks import ConvNet2d
+from oda.networks import ConvNet
 from oda.utils import DataLoader, test_on, Optimization
 
 
@@ -23,14 +23,13 @@ def main(
 
     assimilate_every = 10
     model = KolmogorovFlow(inner_steps=assimilate_every)
-    net = ConvNet2d(rank=rank, kernel_size=10)
+    net = ConvNet(num_spatial_dim=2, rank=rank, kernel_size=10)
 
     if include_training:
         opt = Optimization(lr0=lr0, algorithm=optax.lion, epoch=epoch)
         data_loader = DataLoader(noise_level=noise_level)
-        _, u0, _, yy = data_loader.load_train(unroll_length=10)
-        net, loss_traj = opt.train(fname, model, net, [u0, yy])
-        del u0, yy
+        train_data = data_loader.load_train(unroll_length=10)
+        net, loss_traj = opt.solve(fname, model, net, train_data)
     else:
         net = eqx.tree_deserialise_leaves(f"results/{fname}.eqx", net)
         loss_traj = np.ones((epoch // 100,))

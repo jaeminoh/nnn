@@ -22,9 +22,8 @@ def main(
     if include_training:
         opt = Optimization(lr0=lr0, algorithm=optax.lion, epoch=epoch)
         data_loader = DataLoader(noise_level=noise_level)
-        _, u0, _, yy = data_loader.load_train(unroll_length=10)
-        net, loss_traj = opt.train(fname, model, net, [u0, yy])
-        del u0, yy
+        train_data = data_loader.load_train(unroll_length=10)
+        net, loss_traj = opt.solve(fname, model, net, train_data)
     else:
         net = eqx.tree_deserialise_leaves(f"results/{fname}.eqx", net)
         loss_traj = np.ones((epoch // 100,))

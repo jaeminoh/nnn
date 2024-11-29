@@ -6,95 +6,22 @@ import numpy as np
 import optax
 from tqdm import trange
 
-from oda.data_containers import Solution
+from oda.data_utils import DataLoader, Solution
+from oda.problems import DynamicalCore
 
 
-def solve(solver_step, net, state, *args, maxiter: int = 200):
-    loss_traj = []
-    min_loss = np.inf
-    for it in (pbar := trange(1, 1 + maxiter)):
-        net, state = solver_step(net, state, *args)
-        if it % 5 == 0:
-            pbar.set_postfix({"loss": f"{(loss:= state.value):.3e}"})
-            loss_traj.append(loss)
-            if np.isnan(loss):
-                break
-            elif loss < min_loss:
-                min_loss = loss
-                opt_net = net
-
-    print(f"Done! min_loss: {min_loss:.3e}, final_loss: {state.value:.3e}")
-    return opt_net, state, np.stack(loss_traj)
-
-
-class DataLoader:
-    """A collection of useful methods for data loading.
-
-    All methods returns `tt`, `u0`, `uu_ref`, and `yy`.
-
-    - `tt`: time points
-    - `u0`: initial condition
-    - `uu_ref`: reference solution evaluated at `tt[1:]`.
-    - `yy`: simulated noisy observation, by adding Gaussian noise to `uu_ref`.
-    """
-
-    def __init__(self, noise_level: int = 100):
-        self.noise_level = noise_level
-
-    def load_train(self, unroll_length: int = 50, seed: int = 0):
-        """
-        Load a single long time series as an *ensemble* of short time series.
-
-        For instance, let `len(tt) == 30001` and `unroll_length == 50`.
-        The long time series will be divided into 600 chunks of length 51 time series,
-        where the last element of the current time series (`uu_ref[:-1, -1]`)
-        should be equal to the first element of the next time series (`u0[1:]`).
-        The chunks are then stacked and regarded as an ensemble.
-        """
-        np.random.seed(seed)
-        d = np.load("data/train.npz")
-        tt = d["tt"]
-        uu = d["sol"]
-        del d
-
-        Nt, *Nx = uu.shape
-
-        assert (Nt - 1) % unroll_length == 0, "unroll_length should divide (Nt-1)!"
-        N_traj = (Nt - 1) // unroll_length
-
-        u0 = np.zeros([N_traj] + Nx)
-        uu_ref = np.zeros([N_traj] + [unroll_length] + Nx)
-
-        for i in range(N_traj):
-            _start = unroll_length * i
-            u0[i] = uu[_start]
-            uu_ref[i] = uu[_start + 1 : _start + unroll_length + 1]
-
-        assert np.allclose(u0[1:], uu_ref[:-1, -1]), "index error!"
-
-        u0 = _add_noise(u0, noise_level=self.noise_level)
-        yy = _add_noise(uu_ref, noise_level=self.noise_level)
-        return tt, u0, uu_ref, yy
-
-    def load_test(self, fname: str, unroll_length: int, seed: int = 1):
-        np.random.seed(seed)
-        d = np.load(fname)
-        tt = d["tt"][: unroll_length + 1]
-        uu = d["sol"]
-        del d
-        u0 = _add_noise(uu[0], noise_level=self.noise_level)
-        uu = uu[1 : unroll_length + 1]
-        yy = _add_noise(uu, noise_level=self.noise_level)
-        return tt, u0, uu, yy
-
-
-def _add_noise(target, noise_level: int = 0):
-    return target + 0.01 * noise_level * np.random.randn(*target.shape)
-
-
-def test_on(set: str, solver, noise_level, net, unroll_length: int = 60):
+def test_on(
+    train_or_test: str,
+    solver: DynamicalCore,
+    noise_level: int,
+    net,
+    unroll_length: int = 60,
+) -> Solution:
+    "Test for obtained solution."
     data_loader = DataLoader(noise_level)
-    tt, u0, uu_ref, yy = data_loader.load_test(f"data/{set}.npz", unroll_length)
+    tt, u0, uu_ref, yy = data_loader.load_test(
+        f"data/{train_or_test}.npz", unroll_length
+    )
     uu_base = solver.solve(u0, tt)
     uu_f, uu_a = solver.unroll(net, u0, yy)
     uu = Solution(tt, uu_ref, uu_base, uu_f, uu_a, yy)
@@ -103,22 +30,19 @@ def test_on(set: str, solver, noise_level, net, unroll_length: int = 60):
 
 def visualize(
     uu: Solution,
-    loss_traj,
+    loss_traj: list,
     fname: str = "base",
-):
-    uu_ref = uu.reference
-    uu_base = uu.baseline
-    uu_f = uu.forecast
-    uu_a = uu.analysis
-    tt = uu.tt
-    yy = uu.observation
-
+) -> None:
+    "Visualization to assess the quality of solution."
     _, (axs0, axs1) = plt.subplots(ncols=3, nrows=2, figsize=(12, 8))
     plt.suptitle(fname)
 
     titles = ["Forward Euler", "Forecast"]
-    scale = abs(uu_ref).max()
-    errors = np.stack([abs(uu_ref - uu_base), abs(uu_ref - uu_f)]) / scale
+    scale = abs(uu.reference).max()
+    errors = (
+        np.stack([abs(uu.reference - uu.baseline), abs(uu.reference - uu.forecast)])
+        / scale
+    )
     vmax = errors[1].max()
     for ax, title, error in zip(axs0[:-1], titles, errors):
         ax.imshow(error, vmax=vmax, vmin=0, aspect="auto")
@@ -133,16 +57,16 @@ def visualize(
 
     indices = [0, 64]
     for i, ax in zip(indices, axs1[:-1]):
-        ax.plot(tt[1:], uu_ref[:, i], label="Reference", linewidth=3)
-        ax.plot(tt[1:], uu_f[:, i], ":", label="Forecast", linewidth=2)
+        ax.plot(uu.tt[1:], uu.reference[:, i], label="Reference", linewidth=3)
+        ax.plot(uu.tt[1:], uu.forecast[:, i], ":", label="Forecast", linewidth=2)
         ax.set_xlabel(r"$t$")
         ax.set_ylabel(r"$u(x_i)$")
         ax.set_title(f"{i}th position")
 
     ax = axs1[-1]
-    ax.plot(tt[1:], uu_ref[:, 32], label="Reference", linewidth=3)
-    ax.plot(tt[1:], uu_f[:, 32], ":", label="Forecast", linewidth=2)
-    ax.plot(tt[1:], yy[:, 32], "--", label="Observation", linewidth=1)
+    ax.plot(uu.tt[1:], uu.reference[:, 32], label="Reference", linewidth=3)
+    ax.plot(uu.tt[1:], uu.forecast[:, 32], ":", label="Forecast", linewidth=2)
+    ax.plot(uu.tt[1:], uu.observation[:, 32], "--", label="Observation", linewidth=1)
     ax.legend()
     ax.set_xlabel(r"$t$")
     ax.set_ylabel(r"$u(x_i)$")
@@ -158,18 +82,53 @@ class Optimization:
         self.epoch = epoch
         self.algorithm = algorithm(lr)
 
-    def train(self, fname: str, model, net, data):
-        "dynamical core, neural network, data, and optimizer"
+    def solve(self, fname: str, model: DynamicalCore, net, data):
+        """
+        Loops for iterative optimization.
+
+        **args**
+        - fname: file name to serialize solution
+        - model: Lorenz96? Kursiv? Kolmogorov Flow?
+        - net: initial guess of the solution
+        - data: inputs for optimization objective.
+
+        **returns**
+        - solution
+        - loss trajectory
+        """
         solver = jaxopt.OptaxSolver(model.compute_loss, self.algorithm)
-        solver_step = jax.jit(solver.update)
 
         u0, yy = data
-        # train
         state = solver.init_state(net, u0, yy)
-        net, state, loss_traj = solve(
-            solver_step, net, state, u0[:100], yy[:100], maxiter=self.epoch
+        net, state, loss_traj = _solve(
+            solver.update, net, state, u0[:100], yy[:100], maxiter=self.epoch
         )
 
-        # save checkpoint
-        eqx.tree_serialise_leaves(f"results/{fname}.eqx", net)
+        eqx.tree_serialise_leaves(f"results/{fname}.eqx", net)  # save checkpoint
         return net, loss_traj
+
+
+def _solve(solver_step, net, state, *args, maxiter: int = 200):
+    """
+    **args**
+        - solver_step: one step of the optimizer
+        - net: initial guess for the solution
+        - state: state of optimizer (e.g., momentum, past gradients, ...)
+        - *args: inputs for optimization objective.
+    """
+    solver_step = jax.jit(solver_step)
+    loss_traj = []
+    min_loss = np.inf
+    for it in (pbar := trange(1, 1 + maxiter)):
+        net, state = solver_step(net, state, *args)
+        if it % 5 == 0:
+            pbar.set_postfix({"loss": f"{(loss:= state.value):.3e}"})
+            loss_traj.append(loss)
+            if np.isnan(loss):
+                break
+            elif loss < min_loss:
+                min_loss = loss
+                opt_net = net
+
+    print(f"Done! min_loss: {min_loss:.3e}, final_loss: {state.value:.3e}")
+    return opt_net, state, np.stack(loss_traj)
