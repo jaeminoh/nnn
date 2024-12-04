@@ -11,3 +11,6 @@ urls = {repository = "https://github.com/jaeminoh/DALS" }
 
 [tool.setuptools]
 packages = ["oda"]
+
+[tool.ruff.lint]
+ignore = ["F722"]
