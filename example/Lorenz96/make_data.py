@@ -8,7 +8,7 @@ jax.config.update("jax_platform_name", "cpu")
 
 
 def main(Nx: int = 128, draw_plot: bool = False):
-    from oda.problems import Lorenz96
+    from oda.models import Lorenz96
 
     print(f"check precision: {jax.numpy.ones(()).dtype}")
     """

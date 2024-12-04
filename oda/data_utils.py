@@ -1,7 +1,11 @@
 from dataclasses import dataclass
 
+import jax
 import numpy as np
-from jaxtyping import ArrayLike
+from beartype import beartype as typechecker
+from jaxtyping import ArrayLike, Float, jaxtyped
+
+from oda.observation import ObservationOperator
 
 
 @dataclass
@@ -37,10 +41,16 @@ class DataLoader:
     - `yy`: simulated noisy observation, by adding Gaussian noise to `uu_ref`.
     """
 
-    def __init__(self, noise_level: int = 100):
+    def __init__(self, observe: ObservationOperator, noise_level: int = 100):
+        self.observe = observe
         self.noise_level = noise_level
 
-    def load_train(self, unroll_length: int = 50, seed: int = 0):
+    @jaxtyped(typechecker=typechecker)
+    def load_train(
+        self, unroll_length: int = 50, seed: int = 0, max_ens_size=None
+    ) -> tuple[
+        Float[ArrayLike, " ens *Nx"], Float[ArrayLike, " ens {unroll_length} *No"]
+    ]:
         """
         Load a single long time series as an *ensemble* of short time series.
 
@@ -72,7 +82,12 @@ class DataLoader:
         assert np.allclose(u0[1:], uu_ref[:-1, -1]), "index error!"
 
         u0 = _add_noise(u0, noise_level=self.noise_level)
+        uu_ref = jax.vmap(jax.vmap(self.observe))(uu_ref)
         yy = _add_noise(uu_ref, noise_level=self.noise_level)
+
+        if max_ens_size:
+            u0 = u0[:max_ens_size]
+            yy = yy[:max_ens_size]
         return u0, yy
 
     def load_test(self, fname: str, unroll_length: int, seed: int = 1):
@@ -83,9 +98,9 @@ class DataLoader:
         del d
         u0 = _add_noise(uu[0], noise_level=self.noise_level)
         uu = uu[1 : unroll_length + 1]
-        yy = _add_noise(uu, noise_level=self.noise_level)
+        yy = _add_noise(jax.vmap(self.observe)(uu), noise_level=self.noise_level)
         return tt, u0, uu, yy
-    
+
 
 def _add_noise(target, noise_level: int = 0):
     return target + 0.01 * noise_level * np.random.randn(*target.shape)

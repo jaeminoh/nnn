@@ -7,18 +7,17 @@ import optax
 from tqdm import trange
 
 from oda.data_utils import DataLoader, Solution
-from oda.problems import DynamicalCore
+from oda.models import DynamicalCore
 
 
 def test_on(
     train_or_test: str,
     solver: DynamicalCore,
-    noise_level: int,
     net,
-    unroll_length: int = 60,
+    data_loader: DataLoader,
+    unroll_length: int = 60
 ) -> Solution:
     "Test for obtained solution."
-    data_loader = DataLoader(noise_level)
     tt, u0, uu_ref, yy = data_loader.load_test(
         f"data/{train_or_test}.npz", unroll_length
     )
@@ -101,7 +100,7 @@ class Optimization:
         u0, yy = data
         state = solver.init_state(net, u0, yy)
         net, state, loss_traj = _solve(
-            solver.update, net, state, u0[:100], yy[:100], maxiter=self.epoch
+            solver.update, net, state, u0, yy, maxiter=self.epoch
         )
 
         eqx.tree_serialise_leaves(f"results/{fname}.eqx", net)  # save checkpoint
@@ -110,6 +109,8 @@ class Optimization:
 
 def _solve(solver_step, net, state, *args, maxiter: int = 200):
     """
+    Iterative minimization.
+    
     **args**
         - solver_step: one step of the optimizer
         - net: initial guess for the solution

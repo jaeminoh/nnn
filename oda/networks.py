@@ -16,6 +16,7 @@ class ConvNet(eqx.Module):
         num_spatial_dim: int = 1,
         rank: int = 32,
         kernel_size: int = 4,
+        stride: int = 1,
         key: PRNGKeyArray = jr.key(4321),
     ):
         key1, key2 = jr.split(key)
@@ -26,7 +27,7 @@ class ConvNet(eqx.Module):
             kernel_size=kernel_size,
             stride=1,
             padding="SAME",
-            padding_mode="circular",
+            padding_mode="CIRCULAR",
             key=key1,
         )
         self.decoder = eqx.nn.ConvTranspose(
@@ -34,11 +35,11 @@ class ConvNet(eqx.Module):
             in_channels=rank,
             out_channels=1,
             kernel_size=kernel_size,
-            stride=1,
+            stride=stride,
             padding="SAME",
-            padding_mode="circular",
+            padding_mode="CIRCULAR",
             key=key2,
         )
 
-    def __call__(self, u, y):
-        return self.decoder(jax.nn.swish(self.encoder((u - y)[None, ...]))).squeeze()
+    def __call__(self, Hu, y):
+        return self.decoder(jax.nn.swish(self.encoder((Hu - y)[None, ...]))).squeeze()

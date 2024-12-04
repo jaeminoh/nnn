@@ -2,8 +2,8 @@ import equinox as eqx
 import numpy as np
 import optax
 
+from oda.models import Kursiv
 from oda.networks import ConvNet
-from oda.problems import Kursiv
 from oda.utils import DataLoader, Optimization, test_on, visualize
 
 
@@ -13,25 +13,26 @@ def main(
     noise_level: int = 0,
     rank: int = 32,
     include_training: bool = True,
+    sensor_every: int = 1,
 ):
     fname = f"kursiv_lr{lr0}_epoch{epoch}_noise{noise_level}_rank{rank}"
     print(fname)
-    model = Kursiv(Nx=128, xl=0, xr=32 * np.pi, dt=5e-3, inner_steps=50)
-    net = ConvNet(rank=rank, kernel_size=5)
+    model = Kursiv(sensor_every=sensor_every, d_in=1)
+    net = ConvNet(rank=rank, kernel_size=5, stride=sensor_every)
+    data_loader = DataLoader(model.observe, noise_level=noise_level)
 
     if include_training:
         opt = Optimization(lr0=lr0, algorithm=optax.lion, epoch=epoch)
-        data_loader = DataLoader(noise_level=noise_level)
         train_data = data_loader.load_train(unroll_length=10)
         net, loss_traj = opt.solve(fname, model, net, train_data)
     else:
         net = eqx.tree_deserialise_leaves(f"results/{fname}.eqx", net)
         loss_traj = np.ones((epoch // 100,))
 
-    uu = test_on("train", model, noise_level, net, unroll_length=1000)
+    uu = test_on("train", model, net, data_loader=data_loader, unroll_length=1000)
     visualize(uu, loss_traj, fname=fname + "_train")
 
-    uu = test_on("test", model, noise_level, net, unroll_length=1000)
+    uu = test_on("test", model, net, data_loader=data_loader, unroll_length=1000)
     uu.save(fname + "_test")
     visualize(uu, loss_traj, fname=fname + "_test")
 

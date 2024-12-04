@@ -16,7 +16,7 @@ import jax_cfd.spectral as spectral
 import numpy as np
 from utils import Configuration, add_noise, initialize_vorticity
 
-from oda.problems import DynamicalCore
+from oda.models import DynamicalCore
 
 print(f"Precision check: {jnp.ones(()).dtype}")
 config = Configuration()
@@ -42,9 +42,9 @@ step_fn = spectral.time_stepping.crank_nicolson_rk4(
 
 
 class KolmogorovFlow(DynamicalCore):
-    def __init__(self, dt: float = dt, inner_steps: int = 1):
+    def __init__(self, dt: float = dt, inner_steps: int = 1, **kwargs):
         super().__init__(
-            Nx=config.num_grids, dt=dt, inner_steps=inner_steps
+            Nx=config.num_grids, dt=dt, inner_steps=inner_steps, **kwargs
         )  # dt, num_steps
         self._step = jax.jit(step_fn)
 

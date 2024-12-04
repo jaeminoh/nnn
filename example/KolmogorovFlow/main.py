@@ -1,4 +1,5 @@
 import equinox as eqx
+import jax
 import matplotlib.pyplot as plt
 import numpy as np
 import optax
@@ -7,8 +8,7 @@ import xarray as xr
 from make_data import KolmogorovFlow
 
 from oda.networks import ConvNet
-from oda.utils import DataLoader, test_on, Optimization
-
+from oda.utils import DataLoader, Optimization, test_on
 
 
 def main(
@@ -17,24 +17,28 @@ def main(
     noise_level: int = 75,
     rank: int = 64,
     include_training: bool = True,
+    sensor_every: int = 1,
 ):
     fname = f"kolmogorov_lr{lr0}_epoch{epoch}_noise{noise_level}_rank{rank}"
     print(fname)
 
     assimilate_every = 10
-    model = KolmogorovFlow(inner_steps=assimilate_every)
-    net = ConvNet(num_spatial_dim=2, rank=rank, kernel_size=10)
+    model = KolmogorovFlow(
+        inner_steps=assimilate_every, sensor_every=sensor_every, d_in=2
+    )
+    net = ConvNet(num_spatial_dim=2, rank=rank, kernel_size=10, stride=sensor_every)
+    data_loader = DataLoader(model.observe, noise_level=noise_level)
 
     if include_training:
         opt = Optimization(lr0=lr0, algorithm=optax.lion, epoch=epoch)
-        data_loader = DataLoader(noise_level=noise_level)
-        train_data = data_loader.load_train(unroll_length=10)
+
+        train_data = data_loader.load_train(unroll_length=10, max_ens_size=100)
         net, loss_traj = opt.solve(fname, model, net, train_data)
     else:
         net = eqx.tree_deserialise_leaves(f"results/{fname}.eqx", net)
         loss_traj = np.ones((epoch // 100,))
 
-    uu = test_on("test", model, noise_level, net, unroll_length=5000)
+    uu = test_on("test", model, net, data_loader=data_loader, unroll_length=5000)
     # uu.save(fname + "_test")
 
     print(f"""NRMSE.
@@ -44,13 +48,12 @@ def main(
     # transform the trajectory into real-space and wrap in xarray for plotting
     tt = uu.tt[1:]
     spatial_coord = np.arange(64) * 2 * np.pi / 64  # same for x and y
-    coords = {
-        "time": tt[999::1000],
-        "x": spatial_coord,
-        "y": spatial_coord,
-    }
+    No = 64 // sensor_every
+    obs_coord = np.arange(No) * 2 * np.pi / No
+    coords = {"time": tt[999::1000], "x": spatial_coord, "y": spatial_coord}
+    obs_coords = {"time": tt[999::1000], "x": obs_coord, "y": obs_coord}
 
-    def plotting(type: str):
+    def plotting(type: str, coords=coords):
         if type == "baseline":
             d = uu.baseline
         elif type == "observation":
@@ -62,23 +65,26 @@ def main(
         elif type == "base_vs_ref":
             d = uu.baseline - uu.reference
         elif type == "obs_vs_ref":
-            d = uu.observation - uu.reference
+            d = uu.observation - jax.vmap(model.observe)(uu.reference)
         elif type == "forecast_vs_ref":
             d = uu.forecast - uu.reference
         data = xr.DataArray(d[999::1000], dims=["time", "x", "y"], coords=coords)
         data.plot.imshow(col="time", col_wrap=5, cmap=sns.cm.icefire, robust=True)
         plt.savefig(f"results/{fname}_{type}.pdf")
 
-    for t in [
-        "baseline",
-        "observation",
-        "forecast",
-        "reference",
-        "base_vs_ref",
-        "obs_vs_ref",
-        "forecast_vs_ref",
-    ]:
-        plotting(t)
+    for t, c in zip(
+        [
+            "baseline",
+            "observation",
+            "forecast",
+            "reference",
+            "base_vs_ref",
+            "obs_vs_ref",
+            "forecast_vs_ref",
+        ],
+        [coords, obs_coords, coords, coords, coords, obs_coords, coords],
+    ):
+        plotting(t, coords=c)
 
 
 if __name__ == "__main__":
