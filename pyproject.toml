@@ -7,7 +7,7 @@ requires-python ="~=3.11"
 authors = [
   {name = "Jaemin Oh", email = "jaeminoh.math@gmail.com"},
 ]
-urls = {repository = "https://github.com/jaeminoh/DALS" }
+urls = {repository = "https://github.com/jaeminoh/ODA" }
 
 [tool.setuptools]
 packages = ["oda"]

@@ -50,7 +50,7 @@ class DynamicalCore:
         Neural filtering (or correction) of forecast `u_f` based on observation `y`.
         Returns analysis `u_a`.
         """
-        return u_f + self.dt * self.inner_steps * net(self.observe(u_f), y)
+        return u_f + self.dt * self.inner_steps * net(u_f, self.observe(u_f), y)
 
     def _scan_fn(self, net, u0, y):
         u_f = self.forecast(u0)

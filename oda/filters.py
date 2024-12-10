@@ -1,5 +1,7 @@
 import jax
 import jax.numpy as jnp
+from beartype import beartype as typechecker
+from jaxtyping import ArrayLike, Float, jaxtyped
 
 from oda.models import DynamicalCore
 
@@ -20,7 +22,10 @@ class Filter:
         u_a = self.analysis(net, u_f, y)
         return u_a, jnp.stack([u_f, u_a])
 
-    def unroll(self, net, u0, yy):
+    @jaxtyped(typechecker=typechecker)
+    def unroll(
+        self, net, u0: Float[ArrayLike, "*Nx"], yy: Float[ArrayLike, " Nt *No"]
+    ) -> tuple[Float[ArrayLike, " Nt *Nx"], Float[ArrayLike, " Nt *Nx"]]:
         """
         Fast (differentiable) for-loop for forecast and analysis.
         Returns `u_f` and `u_a`.

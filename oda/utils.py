@@ -54,7 +54,7 @@ def visualize(
     ax.set_title(f"Learning Curve, min: {loss_traj.min():.3e}")
     ax.set_xlabel("100 Iterations")
 
-    indices = [0, 64]
+    indices = [34, 64]
     for i, ax in zip(indices, axs1[:-1]):
         ax.plot(uu.tt[1:], uu.reference[:, i], label="Reference", linewidth=3)
         ax.plot(uu.tt[1:], uu.forecast[:, i], ":", label="Forecast", linewidth=2)
@@ -63,13 +63,13 @@ def visualize(
         ax.set_title(f"{i}th position")
 
     ax = axs1[-1]
-    ax.plot(uu.tt[1:], uu.reference[:, 32], label="Reference", linewidth=3)
-    ax.plot(uu.tt[1:], uu.forecast[:, 32], ":", label="Forecast", linewidth=2)
-    ax.plot(uu.tt[1:], uu.observation[:, 32], "--", label="Observation", linewidth=1)
+    ax.plot(uu.tt[1:], uu.reference[:, 0], label="Reference", linewidth=3)
+    ax.plot(uu.tt[1:], uu.forecast[:, 0], ":", label="Forecast", linewidth=2)
+    ax.plot(uu.tt[1:], uu.observation[:, 0], "--", label="Observation", linewidth=1)
     ax.legend()
     ax.set_xlabel(r"$t$")
     ax.set_ylabel(r"$u(x_i)$")
-    ax.set_title(f"{32}nd position")
+    ax.set_title(f"{0}th position")
 
     plt.tight_layout()
     plt.savefig(f"results/{fname}.pdf", format="pdf")

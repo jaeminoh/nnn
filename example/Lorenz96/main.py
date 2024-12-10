@@ -3,7 +3,7 @@ import numpy as np
 import optax
 
 from oda.models import Lorenz96
-from oda.networks import ConvNet
+from oda.networks import ConvNet as Net
 from oda.utils import DataLoader, Optimization, test_on, visualize
 
 
@@ -19,7 +19,7 @@ def main(
     fname = f"lorenz_lr{lr0}_epoch{epoch}_noise{noise_level}_rank{rank}"
     print(fname)
     model = Lorenz96(d_in=1, sensor_every=sensor_every)
-    net = ConvNet(rank=rank, kernel_size=5, stride=sensor_every)
+    net = Net(rank=rank, kernel_size=5, stride=sensor_every)
     data_loader = DataLoader(model.observe, noise_level=noise_level)
 
     if include_training:

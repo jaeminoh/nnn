@@ -1,8 +1,8 @@
 site_name: ML + Data Assimilation
 
-site_url: https://jaeminoh.github.io/DALS
-repo_url: https://github.com/jaeminoh/DALS
-repo_name: jaeminoh/DALS
+site_url: https://jaeminoh.github.io/ODA
+repo_url: https://github.com/jaeminoh/ODA
+repo_name: jaeminoh/ODA
 
 theme:
   #favicon: images/favicon.png

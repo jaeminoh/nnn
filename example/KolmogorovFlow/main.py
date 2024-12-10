@@ -7,7 +7,7 @@ import seaborn as sns
 import xarray as xr
 from make_data import KolmogorovFlow
 
-from oda.networks import ConvNet
+from oda.networks import ConvNet as Net
 from oda.utils import DataLoader, Optimization, test_on
 
 
@@ -26,12 +26,11 @@ def main(
     model = KolmogorovFlow(
         inner_steps=assimilate_every, sensor_every=sensor_every, d_in=2
     )
-    net = ConvNet(num_spatial_dim=2, rank=rank, kernel_size=10, stride=sensor_every)
+    net = Net(num_spatial_dim=2, rank=rank, kernel_size=10, stride=sensor_every)
     data_loader = DataLoader(model.observe, noise_level=noise_level)
 
     if include_training:
         opt = Optimization(lr0=lr0, algorithm=optax.lion, epoch=epoch)
-
         train_data = data_loader.load_train(unroll_length=10, max_ens_size=100)
         net, loss_traj = opt.solve(fname, model, net, train_data)
     else:
