@@ -7,22 +7,22 @@ import optax
 from tqdm import trange
 
 from oda.data_utils import DataLoader, Solution
-from oda.models import DynamicalCore
+from oda.filters import BaseFilter
 
 
 def test_on(
     train_or_test: str,
-    solver: DynamicalCore,
+    filter: BaseFilter,
     net,
     data_loader: DataLoader,
-    unroll_length: int = 60
+    unroll_length: int = 60,
 ) -> Solution:
     "Test for obtained solution."
     tt, u0, uu_ref, yy = data_loader.load_test(
         f"data/{train_or_test}.npz", unroll_length
     )
-    uu_base = solver.solve(u0, tt)
-    uu_f, uu_a = solver.unroll(net, u0, yy)
+    uu_base = filter.model.solve(u0, tt)
+    uu_f, uu_a = filter.unroll(net, u0, yy)
     uu = Solution(tt, uu_ref, uu_base, uu_f, uu_a, yy)
     return uu
 
@@ -81,7 +81,7 @@ class Optimization:
         self.epoch = epoch
         self.algorithm = algorithm(lr)
 
-    def solve(self, fname: str, model: DynamicalCore, net, data):
+    def solve(self, fname: str, filter: BaseFilter, net, data):
         """
         Loops for iterative optimization.
 
@@ -95,7 +95,7 @@ class Optimization:
         - solution
         - loss trajectory
         """
-        solver = jaxopt.OptaxSolver(model.compute_loss, self.algorithm)
+        solver = jaxopt.OptaxSolver(filter.compute_loss, self.algorithm)
 
         u0, yy = data
         state = solver.init_state(net, u0, yy)
@@ -110,7 +110,7 @@ class Optimization:
 def _solve(solver_step, net, state, *args, maxiter: int = 200):
     """
     Iterative minimization.
-    
+
     **args**
         - solver_step: one step of the optimizer
         - net: initial guess for the solution

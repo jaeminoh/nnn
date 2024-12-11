@@ -1,8 +1,6 @@
 import jax
 import jax.numpy as jnp
 import numpy as np
-from beartype import beartype as typechecker
-from jaxtyping import ArrayLike, Float, jaxtyped
 
 from oda.observation import UniformSubsample
 
@@ -44,45 +42,6 @@ class DynamicalCore:
         for _ in tt[1:] - tt[:-1]:
             ulist.append(self.forecast(ulist[-1]))
         return np.stack(ulist[1:])
-
-    def analysis(self, net, u_f, y):
-        """
-        Neural filtering (or correction) of forecast `u_f` based on observation `y`.
-        Returns analysis `u_a`.
-        """
-        return u_f + self.dt * self.inner_steps * net(u_f, self.observe(u_f), y)
-
-    def _scan_fn(self, net, u0, y):
-        u_f = self.forecast(u0)
-        u_a = self.analysis(net, u_f, y)
-        return u_a, jnp.stack([u_f, u_a])
-
-    def unroll(self, net, u0, yy):
-        """
-        Fast (differentiable) for-loop for forecast and analysis.
-        Returns `u_f` and `u_a`.
-
-        The number of iterations, the number of rows of `out` and `yy` are the same.
-        """
-        _, out = jax.lax.scan(lambda u0, y: self._scan_fn(net, u0, y), u0, yy)
-        return out[:, 0], out[:, 1]  # u_f, u_a
-
-    def _compute_loss(
-        self, net, u0: Float[ArrayLike, " *Nx"], yy: Float[ArrayLike, " Nt ..."]
-    ) -> tuple[Float[ArrayLike, "..."], Float[ArrayLike, " Nt-1 ..."]]:
-        u_f, u_a = self.unroll(net, u0, yy)
-        j0 = self.observe(u_a[0]) - yy[0]
-        j1 = jax.vmap(self.observe)(u_f[1:]) - yy[1:]
-        return j0, j1
-
-    @jaxtyped(typechecker=typechecker)
-    def compute_loss(
-        self, net, u0: Float[ArrayLike, " Ne *Nx"], yy: Float[ArrayLike, " Ne Nt ..."]
-    ) -> Float[ArrayLike, ""]:
-        j0, j1 = jax.vmap(lambda u0, yy: self._compute_loss(net, u0, yy), (0, 0))(
-            u0, yy
-        )
-        return (j0**2).mean() + (j1**2).mean()
 
 
 class Lorenz96(DynamicalCore):

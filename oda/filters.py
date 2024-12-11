@@ -4,21 +4,40 @@ from beartype import beartype as typechecker
 from jaxtyping import ArrayLike, Float, jaxtyped
 
 from oda.models import DynamicalCore
+from oda.observation import ObservationOperator
 
 
-class Filter:
-    def __init__(self, model: DynamicalCore):
-        self.filtering_scale = model.dt * model.inner_steps
+class BaseFilter:
+    def __init__(self, model: DynamicalCore, observe: ObservationOperator):
+        self.model = model
+        self.observe = observe
 
-    def analysis(self, net, u_f, y):
+    def analysis(self):
         """
         Neural filtering (or correction) of forecast `u_f` based on observation `y`.
         Returns analysis `u_a`.
         """
-        return u_f + self.filtering_scale * net(self.observe(u_f), y)
+        raise NotImplementedError
+
+    def _compute_loss(
+        self, net, u0: Float[ArrayLike, " *Nx"], yy: Float[ArrayLike, " Nt *No"]
+    ) -> tuple[Float[ArrayLike, "..."], Float[ArrayLike, " Nt-1 ..."]]:
+        """
+        Loss function motivated by the 4DVAR method.
+
+        **args**
+        - net: neural network
+        - u0: initial condition
+        - yy: observations
+
+        **returns**
+        - j0: fit analysis and observation
+        - j1: fit forecast and observation
+        """
+        raise NotImplementedError
 
     def _scan_fn(self, net, u0, y):
-        u_f = self.forecast(u0)
+        u_f = self.model.forecast(u0)
         u_a = self.analysis(net, u_f, y)
         return u_a, jnp.stack([u_f, u_a])
 
@@ -34,3 +53,77 @@ class Filter:
         """
         _, out = jax.lax.scan(lambda u0, y: self._scan_fn(net, u0, y), u0, yy)
         return out[:, 0], out[:, 1]  # u_f, u_a
+
+    @jaxtyped(typechecker=typechecker)
+    def compute_loss(
+        self, net, u0: Float[ArrayLike, " Ne *Nx"], yy: Float[ArrayLike, " Ne Nt *No"]
+    ) -> Float[ArrayLike, ""]:
+        """
+        Loss function motivated by the 4DVAR method.
+
+        **args**
+        - net: neural network
+        - u0: initial conditions of an ensemble
+        - yy: observations of an ensemble
+
+        **returns**
+        - loss: mean squared error of the fit
+        """
+        j0, j1 = jax.vmap(lambda u0, yy: self._compute_loss(net, u0, yy), (0, 0))(
+            u0, yy
+        )
+        return (j0**2).mean() + (j1**2).mean()
+
+
+class ClassicFilter(BaseFilter):
+    def __init__(self, **basefilter_kwargs):
+        super().__init__(**basefilter_kwargs)
+
+    def analysis(self, net, u_f, y):
+        return u_f + self.model.dt * self.model.inner_steps * net(
+            u_f, self.observe(u_f), y
+        )
+
+    def _compute_loss(
+        self, net, u0: Float[ArrayLike, " *Nx"], yy: Float[ArrayLike, " Nt ..."]
+    ) -> tuple[Float[ArrayLike, "..."], Float[ArrayLike, " Nt-1 ..."]]:
+        u_f, u_a = self.unroll(net, u0, yy)
+        j0 = self.observe(u_a[0]) - yy[0]
+        j1 = jax.vmap(self.observe)(u_f[1:]) - yy[1:]
+        return j0, j1
+
+
+class LearnableObservationFilter(BaseFilter):
+    def __init__(self, **basefilter_kwargs):
+        super().__init__(**basefilter_kwargs)
+
+    def analysis(self, net, u_f, y):
+        return u_f + self.model.dt * self.model.inner_steps * net(
+            u_f, net.observe(u_f), y
+        )
+
+    def _compute_loss(
+        self, net, u0: Float[ArrayLike, " *Nx"], yy: Float[ArrayLike, " Nt ..."]
+    ) -> tuple[Float[ArrayLike, "..."], Float[ArrayLike, " Nt-1 ..."]]:
+        u_f, u_a = self.unroll(net, u0, yy)
+        j0 = net.observe(u_a[0]) - yy[0]
+        j1 = jax.vmap(net.observe)(u_f[1:]) - yy[1:]
+        return j0, j1
+
+
+class ObservationTransposeFilter(BaseFilter):
+    def __init__(self, **basefilter_kwargs):
+        super().__init__(**basefilter_kwargs)
+
+    def analysis(self, net, u_f, y):
+        return u_f + self.model.dt * self.model.inner_steps * net(
+            u_f, u_f, net.observe_transpose(y)
+        )
+
+    def _compute_loss(
+        self, net, u0: Float[ArrayLike, " *Nx"], yy: Float[ArrayLike, " Nt ..."]
+    ) -> tuple[Float[ArrayLike, "..."], Float[ArrayLike, " Nt-1 ..."]]:
+        u_f, u_a = self.unroll(net, u0, yy)
+        j0 = u_a[0] - net.observe_tranpose(yy[0])
+        j1 = u_f[1:] - jax.vmap(net.observe_transpose)(yy[1:])
+        return j0, j1
