@@ -2,10 +2,10 @@ import equinox as eqx
 import numpy as np
 import optax
 
-from oda.models import Kursiv
-from oda.networks import ConvNet as Net
-from oda.utils import DataLoader, Optimization, test_on, visualize
 from oda.filters import ClassicFilter as Filter
+from oda.models import Kursiv
+from oda.networks import SimpleCorrector as Net
+from oda.utils import DataLoader, Optimization, rmse, test_on, visualize
 
 
 def main(
@@ -20,7 +20,9 @@ def main(
     print(fname)
     model = Kursiv(sensor_every=sensor_every, d_in=1)
     filter = Filter(model=model, observe=model.observe)
-    net = Net(rank=rank, kernel_size=5, stride=sensor_every)
+    net = Net(
+        hidden_channels=rank, kernel_size=5, stride=sensor_every, num_spatial_dim=1
+    )
     data_loader = DataLoader(model.observe, noise_level=noise_level)
 
     if include_training:
@@ -38,9 +40,9 @@ def main(
     uu.save(fname + "_test")
     visualize(uu, loss_traj, fname=fname + "_test")
 
-    print(f"""NRMSE.
-          w/o assimilation: {np.linalg.norm(uu.baseline - uu.reference) / np.linalg.norm(uu.reference)}
-          w/  assimilation: {np.linalg.norm(uu.forecast - uu.reference) / np.linalg.norm(uu.reference)}""")
+    print(f"""RMSE.
+          w/o assimilation: {rmse(uu.baseline - uu.reference)}
+          w/  assimilation: {rmse(uu.forecast - uu.reference)}""")
 
 
 if __name__ == "__main__":

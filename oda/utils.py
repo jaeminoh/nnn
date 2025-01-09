@@ -1,5 +1,6 @@
 import equinox as eqx
 import jax
+import jax.numpy as jnp
 import jaxopt
 import matplotlib.pyplot as plt
 import numpy as np
@@ -8,6 +9,10 @@ from tqdm import trange
 
 from oda.data_utils import DataLoader, Solution
 from oda.filters import BaseFilter
+
+
+def rmse(uu):
+    return np.sqrt(jax.vmap(jnp.linalg.norm)(uu)).mean()
 
 
 def test_on(
@@ -52,7 +57,7 @@ def visualize(
     ax = axs0[-1]
     ax.semilogy(loss_traj)
     ax.set_title(f"Learning Curve, min: {loss_traj.min():.3e}")
-    ax.set_xlabel("100 Iterations")
+    ax.set_xlabel("5 Iterations")
 
     indices = [34, 64]
     for i, ax in zip(indices, axs1[:-1]):

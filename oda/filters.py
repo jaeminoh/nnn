@@ -17,7 +17,7 @@ class BaseFilter:
         Neural filtering (or correction) of forecast `u_f` based on observation `y`.
         Returns analysis `u_a`.
         """
-        raise NotImplementedError
+        raise NotImplementedError("Subclasses must implement this method.")
 
     def _compute_loss(
         self, net, u0: Float[ArrayLike, " *Nx"], yy: Float[ArrayLike, " Nt *No"]
@@ -34,7 +34,7 @@ class BaseFilter:
         - j0: fit analysis and observation
         - j1: fit forecast and observation
         """
-        raise NotImplementedError
+        raise NotImplementedError("Subclasses must implement this method.")
 
     def _scan_fn(self, net, u0, y):
         u_f = self.model.forecast(u0)
@@ -80,9 +80,7 @@ class ClassicFilter(BaseFilter):
         super().__init__(**basefilter_kwargs)
 
     def analysis(self, net, u_f, y):
-        return u_f + self.model.dt * self.model.inner_steps * net(
-            u_f, self.observe(u_f), y
-        )
+        return u_f + net(self.observe(u_f), y) * self.model.dt * self.model.inner_steps
 
     def _compute_loss(
         self, net, u0: Float[ArrayLike, " *Nx"], yy: Float[ArrayLike, " Nt ..."]
@@ -90,7 +88,8 @@ class ClassicFilter(BaseFilter):
         u_f, u_a = self.unroll(net, u0, yy)
         j0 = self.observe(u_a[0]) - yy[0]
         j1 = jax.vmap(self.observe)(u_f[1:]) - yy[1:]
-        return j0, j1
+        tt = jnp.arange(yy.shape[0]-1)
+        return j0, j1 * tt[:, None]
 
 
 class LearnableObservationFilter(BaseFilter):
@@ -98,16 +97,14 @@ class LearnableObservationFilter(BaseFilter):
         super().__init__(**basefilter_kwargs)
 
     def analysis(self, net, u_f, y):
-        return u_f + self.model.dt * self.model.inner_steps * net(
-            u_f, net.observe(u_f), y
-        )
+        return u_f + net(u_f, y) * self.model.dt * self.model.inner_steps
 
     def _compute_loss(
         self, net, u0: Float[ArrayLike, " *Nx"], yy: Float[ArrayLike, " Nt ..."]
     ) -> tuple[Float[ArrayLike, "..."], Float[ArrayLike, " Nt-1 ..."]]:
         u_f, u_a = self.unroll(net, u0, yy)
-        j0 = net.observe(u_a[0]) - yy[0]
-        j1 = jax.vmap(net.observe)(u_f[1:]) - yy[1:]
+        j0 = net.u_to_y(u_a[0]) - yy[0]
+        j1 = jax.vmap(net.u_to_y)(u_f[1:]) - yy[1:]
         return j0, j1
 
 
@@ -116,14 +113,12 @@ class ObservationTransposeFilter(BaseFilter):
         super().__init__(**basefilter_kwargs)
 
     def analysis(self, net, u_f, y):
-        return u_f + self.model.dt * self.model.inner_steps * net(
-            u_f, u_f, net.observe_transpose(y)
-        )
+        return u_f + net(u_f, y) * self.model.dt * self.model.inner_steps
 
     def _compute_loss(
         self, net, u0: Float[ArrayLike, " *Nx"], yy: Float[ArrayLike, " Nt ..."]
     ) -> tuple[Float[ArrayLike, "..."], Float[ArrayLike, " Nt-1 ..."]]:
         u_f, u_a = self.unroll(net, u0, yy)
-        j0 = u_a[0] - net.observe_tranpose(yy[0])
-        j1 = u_f[1:] - jax.vmap(net.observe_transpose)(yy[1:])
+        j0 = u_a[0] - net.y_to_u(yy[0])
+        j1 = u_f[1:] - jax.vmap(net.y_to_u)(yy[1:])
         return j0, j1

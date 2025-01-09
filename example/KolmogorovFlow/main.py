@@ -7,9 +7,9 @@ import seaborn as sns
 import xarray as xr
 from make_data import KolmogorovFlow
 
-from oda.networks import ConvNet as Net
+from oda.filters import ObservationTransposeFilter as Filter
+from oda.networks import ObservationTransposeCorrector as Net
 from oda.utils import DataLoader, Optimization, test_on
-from oda.filters import ClassicFilter as Filter
 
 
 def main(
@@ -28,7 +28,9 @@ def main(
         inner_steps=assimilate_every, sensor_every=sensor_every, d_in=2
     )
     filter = Filter(model=model, observe=model.observe)
-    net = Net(num_spatial_dim=2, rank=rank, kernel_size=10, stride=sensor_every)
+    net = Net(
+        num_spatial_dim=2, hidden_channels=rank, kernel_size=10, stride=sensor_every
+    )
     data_loader = DataLoader(model.observe, noise_level=noise_level)
 
     if include_training:
