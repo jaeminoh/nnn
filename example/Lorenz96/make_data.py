@@ -1,14 +1,18 @@
+import os
+
 import diffrax as dfx
 import jax
 import numpy as np
 
+from oda.models import Lorenz96
+
 jax.config.update("jax_enable_x64", True)
-print(f"Precision Check: {jax.numpy.ones(()).dtype}")
 jax.config.update("jax_platform_name", "cpu")
 
 
 def main(Nx: int = 128, draw_plot: bool = False):
-    from oda.models import Lorenz96
+    if not os.path.isdir("data"):
+        os.mkdir("data")
 
     print(f"check precision: {jax.numpy.ones(()).dtype}")
     """
@@ -40,6 +44,7 @@ def main(Nx: int = 128, draw_plot: bool = False):
     )
     uu = sol.ys
     np.arange(0, 318 + 0.01, 0.01)
+
     np.savez("data/train.npz", tt=tt[800:-1000], sol=uu[800:-1000])
     np.savez("data/test.npz", tt=tt[-1001:], sol=uu[-1001:])
 
@@ -57,7 +62,7 @@ def main(Nx: int = 128, draw_plot: bool = False):
         plt.ylabel(r"$t$")
         plt.colorbar()
         plt.tight_layout()
-        plt.savefig("results/lorenz96.pdf", format="pdf")
+        plt.savefig("data/lorenz96.pdf", format="pdf")
 
 
 if __name__ == "__main__":

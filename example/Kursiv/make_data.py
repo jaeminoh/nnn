@@ -1,9 +1,16 @@
+import os
+
 import numpy as np
 from numpy.fft import irfft, rfft, rfftfreq
 from tqdm import trange
 
 
 def kursiv(Nx: int = 128, M: int = 16, draw_plot: bool = False):
+    if not os.path.isdir("data"):
+        os.mkdir("data")
+
+    print(f"Precision check: {np.ones(()).dtype}")
+
     """
     A numerical solver of Kuramoto-Sivashinsky equation by ETDRK4 scheme
     """
@@ -69,7 +76,7 @@ def kursiv(Nx: int = 128, M: int = 16, draw_plot: bool = False):
         plt.ylabel(r"$t$")
         plt.colorbar()
         plt.tight_layout()
-        plt.savefig("results/kursiv.pdf", format="pdf")
+        plt.savefig("data/kursiv.pdf", format="pdf")
 
 
 if __name__ == "__main__":
