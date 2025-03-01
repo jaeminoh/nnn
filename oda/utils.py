@@ -59,7 +59,7 @@ def visualize(
     ax.set_title(f"Learning Curve, min: {loss_traj.min():.3e}")
     ax.set_xlabel("5 Iterations")
 
-    indices = [34, 64]
+    indices = [15, 30]
     for i, ax in zip(indices, axs1[:-1]):
         ax.plot(uu.tt[1:], uu.reference[:, i], label="Reference", linewidth=3)
         ax.plot(uu.tt[1:], uu.forecast[:, i], ":", label="Forecast", linewidth=2)
@@ -77,7 +77,7 @@ def visualize(
     ax.set_title(f"{0}th position")
 
     plt.tight_layout()
-    plt.savefig(f"results/{fname}.pdf", format="pdf")
+    plt.savefig(f"data/{fname}.pdf", format="pdf")
 
 
 class Optimization:
@@ -108,7 +108,7 @@ class Optimization:
             solver.update, net, state, u0, yy, maxiter=self.epoch
         )
 
-        eqx.tree_serialise_leaves(f"results/{fname}.eqx", net)  # save checkpoint
+        eqx.tree_serialise_leaves(f"data/{fname}.eqx", net)  # save checkpoint
         return net, loss_traj
 
 
@@ -128,7 +128,7 @@ def _solve(solver_step, net, state, *args, maxiter: int = 200):
     for it in (pbar := trange(1, 1 + maxiter)):
         net, state = solver_step(net, state, *args)
         if it % 5 == 0:
-            pbar.set_postfix({"loss": f"{(loss:= state.value):.3e}"})
+            pbar.set_postfix({"loss": f"{(loss := state.value):.3e}"})
             loss_traj.append(loss)
             if np.isnan(loss):
                 break

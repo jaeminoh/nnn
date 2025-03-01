@@ -21,7 +21,7 @@ class Solution:
 
     def save(self, fname: str):
         np.savez(
-            f"results/{fname}",
+            f"data/{fname}",
             tt=self.tt,
             uu=self.reference,
             uu_f=self.baseline,
@@ -62,7 +62,7 @@ class DataLoader:
         """
         np.random.seed(seed)
         d = np.load("data/train.npz")
-        tt = d["tt"]
+        # tt = d["tt"]
         uu = d["sol"]
         del d
 

@@ -15,6 +15,7 @@ def main(Nx: int = 128, draw_plot: bool = False):
         os.mkdir("data")
 
     print(f"check precision: {jax.numpy.ones(()).dtype}")
+    print(f"Nx: {Nx}, draw plot: {draw_plot}")
     """
     A numerical solver of Lorenz 96 model
     """
@@ -23,11 +24,11 @@ def main(Nx: int = 128, draw_plot: bool = False):
     u0[0] += 0.01
 
     # time steps
-    tt = np.arange(0, 318 + 0.01, 0.01)
+    tt = np.arange(0, 318 + 0.1, 0.1)
     saveat = dfx.SaveAt(ts=tt)
 
     # ode problem
-    lorenz96 = Lorenz96()
+    lorenz96 = Lorenz96(Nx=Nx)
     prob = dfx.ODETerm(lambda t, u, args: lorenz96(u))
 
     # solve!
@@ -43,10 +44,11 @@ def main(Nx: int = 128, draw_plot: bool = False):
         max_steps=int(1e6),
     )
     uu = sol.ys
-    np.arange(0, 318 + 0.01, 0.01)
 
-    np.savez("data/train.npz", tt=tt[800:-1000], sol=uu[800:-1000])
-    np.savez("data/test.npz", tt=tt[-1001:], sol=uu[-1001:])
+    np.savez("data/train.npz", tt=tt[80:-100], sol=uu[80:-100])
+    np.savez("data/test.npz", tt=tt[-101:], sol=uu[-101:])
+    print(f"train data shape: {uu[80:-100].shape}")
+    print(f"test data shape: {uu[-101:].shape}")
 
     if draw_plot:
         import matplotlib.pyplot as plt

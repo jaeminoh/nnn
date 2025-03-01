@@ -36,10 +36,10 @@ def main(
     if include_training:
         opt = Optimization(lr0=lr0, algorithm=optax.lion, epoch=epoch)
         train_data = data_loader.load_train(unroll_length=10, max_ens_size=100)
-        net, loss_traj = opt.solve(fname, filter, net, train_data)
+        net, _ = opt.solve(fname, filter, net, train_data)
     else:
-        net = eqx.tree_deserialise_leaves(f"results/{fname}.eqx", net)
-        loss_traj = np.ones((epoch // 100,))
+        net = eqx.tree_deserialise_leaves(f"data/{fname}.eqx", net)
+        # loss_traj = np.ones((epoch // 100,))
 
     uu = test_on("test", filter, net, data_loader=data_loader, unroll_length=5000)
     # uu.save(fname + "_test")
@@ -73,7 +73,7 @@ def main(
             d = uu.forecast - uu.reference
         data = xr.DataArray(d[999::1000], dims=["time", "x", "y"], coords=coords)
         data.plot.imshow(col="time", col_wrap=5, cmap=sns.cm.icefire, robust=True)
-        plt.savefig(f"results/{fname}_{type}.pdf")
+        plt.savefig(f"data/{fname}_{type}.pdf")
 
     for t, c in zip(
         [

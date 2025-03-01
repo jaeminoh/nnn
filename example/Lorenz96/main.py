@@ -4,24 +4,26 @@ import optax
 
 from oda.filters import ClassicFilter as Filter
 from oda.models import Lorenz96
-from oda.networks import SimpleCorrector as Net
+from oda.networks import MultiLayerPerceptron as Net
 from oda.utils import DataLoader, Optimization, test_on, visualize, rmse
 
 
 def main(
     lr0: float = 1e-3,
     epoch: int = 200,
-    noise_level: int = 0,
+    noise_level: int = 36,
     rank: int = 32,
     include_training: bool = True,
     sensor_every: int = 1,
-    test_unroll_length: int = 1000,
+    test_unroll_length: int = 100,
+    Nx: int = 128,
 ):
     fname = f"lorenz_lr{lr0}_epoch{epoch}_noise{noise_level}_rank{rank}"
     print(fname)
-    model = Lorenz96(d_in=1, sensor_every=sensor_every)
+    model = Lorenz96(d_in=1, Nx=Nx, sensor_every=sensor_every, inner_steps=10)
     filter = Filter(model=model, observe=model.observe)
-    net = Net(hidden_channels=rank, kernel_size=5, stride=sensor_every, num_spatial_dim=1)
+    # net = Net(hidden_channels=rank, kernel_size=5, stride=sensor_every, num_spatial_dim=1)
+    net = Net(d_in=Nx // sensor_every, width=rank, depth=2, d_out=Nx, w0=5.0)
     data_loader = DataLoader(model.observe, noise_level=noise_level)
 
     if include_training:
@@ -29,7 +31,7 @@ def main(
         train_data = data_loader.load_train(unroll_length=10)
         net, loss_traj = opt.solve(fname, filter, net, train_data)
     else:
-        net = eqx.tree_deserialise_leaves(f"results/{fname}.eqx", net)
+        net = eqx.tree_deserialise_leaves(f"data/{fname}.eqx", net)
         loss_traj = np.ones((epoch // 100,))
 
     uu = test_on(
@@ -45,8 +47,6 @@ def main(
 
     norm_reference = np.linalg.norm(uu.reference)
     norm_reference = 1
-    
-    
 
     print(f"""RMSE.
           w/o assimilation: {rmse(uu.baseline - uu.reference) / norm_reference}

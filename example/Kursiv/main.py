@@ -11,7 +11,7 @@ from oda.utils import DataLoader, Optimization, rmse, test_on, visualize
 def main(
     lr0: float = 1e-3,
     epoch: int = 100000,
-    noise_level: int = 0,
+    noise_level: int = 36,
     rank: int = 32,
     include_training: bool = True,
     sensor_every: int = 1,
@@ -30,7 +30,7 @@ def main(
         train_data = data_loader.load_train(unroll_length=10)
         net, loss_traj = opt.solve(fname, filter, net, train_data)
     else:
-        net = eqx.tree_deserialise_leaves(f"results/{fname}.eqx", net)
+        net = eqx.tree_deserialise_leaves(f"data/{fname}.eqx", net)
         loss_traj = np.ones((epoch // 100,))
 
     uu = test_on("train", filter, net, data_loader=data_loader, unroll_length=1000)
