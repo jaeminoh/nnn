@@ -59,8 +59,8 @@ def kursiv(Nx: int = 128, M: int = 16, draw_plot: bool = False):
     vv = np.stack(vv)
     uu = irfft(vv, Nx, axis=-1)
 
-    np.savez("data/train.npz", tt=tt[5000:-5000], sol=uu[5000:-5000])
-    np.savez("data/test.npz", tt=tt[35000:], sol=uu[35000:])
+    np.savez("data/train.npz", tt=tt[5000:-25000], sol=uu[5000:-25000])
+    np.savez("data/test.npz", tt=tt[15000:], sol=uu[15000:])
 
     if draw_plot:
         import matplotlib.pyplot as plt

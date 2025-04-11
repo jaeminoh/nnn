@@ -12,7 +12,7 @@ from oda.filters import BaseFilter
 
 
 def rmse(uu):
-    return np.sqrt(jax.vmap(jnp.linalg.norm)(uu)).mean()
+    return np.sqrt(jax.vmap(jnp.linalg.norm)(uu) ** 2 / uu.shape[1]).mean()
 
 
 def test_on(

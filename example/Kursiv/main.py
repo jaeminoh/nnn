@@ -10,8 +10,8 @@ from oda.utils import DataLoader, Optimization, rmse, test_on, visualize
 
 def main(
     lr0: float = 1e-3,
-    epoch: int = 100000,
-    noise_level: int = 36,
+    epoch: int = 1000,
+    noise_level: int = 50,
     rank: int = 32,
     include_training: bool = True,
     sensor_every: int = 1,
@@ -37,8 +37,12 @@ def main(
     visualize(uu, loss_traj, fname=fname + "_train")
 
     uu = test_on("test", filter, net, data_loader=data_loader, unroll_length=1000)
-    uu.save(fname + "_test")
-    visualize(uu, loss_traj, fname=fname + "_test")
+    uu.save(fname + "_test1")
+    visualize(uu, loss_traj, fname=fname + "_test1")
+
+    uu = test_on("test", filter, net, data_loader=data_loader, unroll_length=5000)
+    uu.save(fname + "_test2")
+    visualize(uu, loss_traj, fname=fname + "_test2")
 
     print(f"""RMSE.
           w/o assimilation: {rmse(uu.baseline - uu.reference)}

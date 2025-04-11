@@ -1,15 +1,7 @@
 *.eqx
-*.pdf
-*.npz
 *.pyc
-*.sh
-uv.lock
-*.mp4
-*.nc
-
-ERA5
-*.html
-*.png
+*.npz
+*.pdf
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
