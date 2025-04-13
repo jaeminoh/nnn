@@ -13,49 +13,6 @@ class BaseCorrector(eqx.Module):
         raise NotImplementedError
 
 
-class _StateToObservation(eqx.Module):
-    downsampling: eqx.nn.Conv
-    conv: eqx.nn.Conv
-
-    def __init__(
-        self,
-        *,
-        num_spatial_dim: int = 1,
-        hidden_channels: int = 32,
-        kernel_size: int = 4,
-        stride: int = 1,
-        key: PRNGKeyArray = jr.key(4321),
-    ):
-        key1, key2 = jr.split(key)
-        self.downsampling = eqx.nn.Conv(
-            num_spatial_dims=num_spatial_dim,
-            in_channels=1,
-            out_channels=hidden_channels,
-            kernel_size=kernel_size,
-            stride=stride,
-            padding="SAME",
-            padding_mode="CIRCULAR",
-            key=key1,
-        )
-        self.conv = eqx.nn.ConvTranspose(
-            num_spatial_dims=num_spatial_dim,
-            in_channels=hidden_channels,
-            out_channels=1,
-            kernel_size=kernel_size,
-            stride=1,
-            padding="SAME",
-            padding_mode="CIRCULAR",
-            key=key2,
-        )
-
-    @jaxtyped(typechecker=typechecker)
-    def __call__(
-        self,
-        u: Float[ArrayLike, "*Nx"],
-    ) -> Float[ArrayLike, "*No"]:
-        return self.conv(jax.nn.swish(self.downsampling(u[None, ...]))).squeeze()
-
-
 class MultiLayerPerceptron(eqx.Module):
     layers: list
     w0: jnp.ndarray = eqx.field(static=True)
@@ -87,6 +44,73 @@ class MultiLayerPerceptron(eqx.Module):
         return self.layers[-1](x).squeeze()
 
 
+class AutoEncoder(eqx.Module):
+    encoders: list
+    decoders: list
+
+    def __init__(
+        self,
+        *,
+        hidden_channels_list: list[int] = [32, 64, 128],
+        kernel_size: int = 4,
+        stride: int = 1,
+        key: PRNGKeyArray = jr.key(4321),
+        num_spatial_dim: int = 1,
+    ):
+        key1, key2 = jr.split(key)
+        hidden_channels_list = [1] + hidden_channels_list
+        strides_list = [1, 1, stride]
+        self.encoders = [
+            eqx.nn.ConvTranspose(
+                num_spatial_dim,
+                _in,
+                _out,
+                kernel_size,
+                _s,
+                padding="SAME",
+                padding_mode="ZEROS",
+                key=_k,
+            )
+            for (_in, _out, _s, _k) in zip(
+                hidden_channels_list[:-1],
+                hidden_channels_list[1:],
+                strides_list,
+                jr.split(key1, len(hidden_channels_list) - 1),
+            )
+        ]
+
+        self.decoders = [
+            eqx.nn.Conv(
+                num_spatial_dim,
+                _in,
+                _out,
+                kernel_size,
+                stride=1,
+                padding="SAME",
+                padding_mode="CIRCULAR",
+                key=_k,
+            )
+            for (_in, _out, _k) in zip(
+                hidden_channels_list[1:][::-1],
+                hidden_channels_list[:-1][::-1],
+                jr.split(key2, len(hidden_channels_list) - 1),
+            )
+        ]
+
+    @jaxtyped(typechecker=typechecker)
+    def __call__(
+        self,
+        Hu: Float[ArrayLike, "*No"],
+        y: Float[ArrayLike, "*No"],
+    ):
+        x = (Hu - y)[None]
+        for encoder in self.encoders:
+            x = jax.nn.swish(encoder(x))
+        for decoder in self.decoders[:-1]:
+            x = jax.nn.swish(decoder(x))
+        return self.decoders[-1](x).squeeze()
+
+
 class SimpleCorrector(BaseCorrector):
     """
     Circular padding if periodic spatial domain.
@@ -107,6 +131,7 @@ class SimpleCorrector(BaseCorrector):
         key: PRNGKeyArray = jr.key(4321),
     ):
         key1, key2 = jr.split(key)
+
         self.encoder = eqx.nn.ConvTranspose(
             num_spatial_dims=num_spatial_dim,
             in_channels=1,
@@ -135,82 +160,6 @@ class SimpleCorrector(BaseCorrector):
         y: Float[ArrayLike, "*No"],
     ):
         return self.decoder(jax.nn.swish(self.encoder((Hu - y)[None, ...]))).squeeze()
-
-
-class LearnableObservationCorrector(BaseCorrector):
-    u_to_y: _StateToObservation
-    corrector: SimpleCorrector
-
-    def __init__(self, *, key: PRNGKeyArray = jr.key(4321), **cnn_kwargs):
-        key1, key2 = jr.split(key)
-        self.u_to_y = _StateToObservation(**cnn_kwargs, key=key1)
-        self.corrector = SimpleCorrector(**cnn_kwargs, key=key2)
-
-    def __call__(self, u_f, y):
-        return self.corrector(self.u_to_y(u_f), y)
-
-
-class _ObservationToState(eqx.Module):
-    upsampling: eqx.nn.ConvTranspose
-    conv: eqx.nn.Conv
-
-    def __init__(
-        self,
-        *,
-        num_spatial_dim: int = 1,
-        hidden_channels: int = 32,
-        kernel_size: int = 4,
-        stride: int = 1,
-        key: PRNGKeyArray = jr.key(4321),
-    ):
-        key1, key2 = jr.split(key)
-        self.upsampling = eqx.nn.ConvTranspose(
-            num_spatial_dims=num_spatial_dim,
-            in_channels=1,
-            out_channels=hidden_channels,
-            kernel_size=kernel_size,
-            stride=stride,
-            padding="SAME",
-            padding_mode="CIRCULAR",
-            key=key1,
-        )
-        self.conv = eqx.nn.Conv(
-            num_spatial_dims=num_spatial_dim,
-            in_channels=hidden_channels,
-            out_channels=1,
-            kernel_size=kernel_size,
-            stride=1,
-            padding="SAME",
-            padding_mode="CIRCULAR",
-            key=key2,
-        )
-
-    @jaxtyped(typechecker=typechecker)
-    def __call__(
-        self,
-        y: Float[ArrayLike, "*No"],
-    ) -> Float[ArrayLike, "*Nx"]:
-        return self.conv(jax.nn.swish(self.upsampling(y[None, ...]))).squeeze()
-
-
-class ObservationTransposeCorrector(BaseCorrector):
-    y_to_u: _ObservationToState
-    corrector: SimpleCorrector
-
-    def __init__(self, *, key: PRNGKeyArray = jr.key(4321), **cnn_kwargs):
-        key1, key2 = jr.split(key)
-        self.y_to_u = _ObservationToState(**cnn_kwargs, key=key1)
-        self.corrector = SimpleCorrector(
-            num_spatial_dim=cnn_kwargs["num_spatial_dim"],
-            hidden_channels=cnn_kwargs["hidden_channels"],
-            kernel_size=cnn_kwargs["kernel_size"],
-            key=key2,
-        )
-
-    def __call__(
-        self, u: Float[ArrayLike, "*Nx"], y: Float[ArrayLike, "*No"]
-    ) -> Float[ArrayLike, "*Nx"]:
-        return self.corrector(u, self.y_to_u(y))
 
 
 def siren_init(mlp: MultiLayerPerceptron, key: PRNGKeyArray = jr.key(4123)):
