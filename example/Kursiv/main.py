@@ -11,17 +11,20 @@ from oda.utils import DataLoader, Optimization, rmse, test_on, visualize
 def main(
     lr0: float = 1e-3,
     epoch: int = 1000,
-    noise_level: int = 50,
-    rank: int = 32,
+    noise_level: int = 1,  # 0 is nonsense, since exact initial condition.
+    rank: int = 16,
     include_training: bool = True,
-    sensor_every: int = 1,
+    sensor_every: int = 4,
 ):
     fname = f"kursiv_lr{lr0}_epoch{epoch}_noise{noise_level}_rank{rank}"
     print(fname)
     model = Kursiv(sensor_every=sensor_every, d_in=1)
     filter = Filter(model=model, observe=model.observe)
     net = Net(
-        hidden_channels=rank, kernel_size=5, stride=sensor_every, num_spatial_dim=1
+        kernel_size=5,
+        stride=sensor_every,
+        num_spatial_dim=1,
+        hidden_channels=rank,
     )
     data_loader = DataLoader(model.observe, noise_level=noise_level)
 
