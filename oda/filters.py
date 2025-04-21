@@ -80,7 +80,7 @@ class ClassicFilter(BaseFilter):
     def __init__(self, **basefilter_kwargs):
         super().__init__(**basefilter_kwargs)
 
-    def analysis(self, net, u_f, y):
+    def analysis(self, net, u_f, y):  # first order operator splitting
         return u_f + net(self.observe(u_f), y) * self.model.dt * self.model.inner_steps
 
     def _compute_loss(
@@ -93,6 +93,9 @@ class ClassicFilter(BaseFilter):
         return j0, j1 * tt[:, None]
 
 
+##########
+# Unused #
+##########
 class LearnableObservationFilter(BaseFilter):
     def __init__(self, **basefilter_kwargs):
         super().__init__(**basefilter_kwargs)

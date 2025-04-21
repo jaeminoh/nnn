@@ -13,35 +13,55 @@ class BaseCorrector(eqx.Module):
         raise NotImplementedError
 
 
-class MultiLayerPerceptron(eqx.Module):
-    layers: list
-    w0: jnp.ndarray = eqx.field(static=True)
+class SimpleCorrector(BaseCorrector):
+    """
+    Circular padding if periodic spatial domain.
+
+    net = (Hu, y) -> Conv -> activation -> ConvTransposed
+    """
+
+    encoder: eqx.nn.Conv
+    decoder: eqx.nn.ConvTranspose
 
     def __init__(
         self,
         *,
-        d_in: Union[str, int] = 2,
-        width: int = 32,
-        depth: int = 4,
-        d_out: Union[str, int] = "scalar",
+        num_spatial_dim: int = 1,
+        hidden_channels: int = 32,
+        kernel_size: int = 4,
+        stride: int = 1,
         key: PRNGKeyArray = jr.key(4321),
-        w0: float = 10.0,
     ):
-        layers = [d_in] + [width] * (depth - 1) + [d_out]
-        keys = jr.split(key, depth)
-        self.layers = [
-            eqx.nn.Linear(_in, _out, key=_k)
-            for _in, _out, _k in zip(layers[:-1], layers[1:], keys)
-        ]
-        self.w0 = jnp.array(w0)
-        # self = convert_mlp_to_siren(self)
+        key1, key2 = jr.split(key)
+
+        self.encoder = eqx.nn.ConvTranspose(
+            num_spatial_dims=num_spatial_dim,
+            in_channels=1,
+            out_channels=hidden_channels,
+            kernel_size=kernel_size,
+            stride=stride,
+            padding="SAME",
+            padding_mode="ZEROS",
+            key=key1,
+        )
+        self.decoder = eqx.nn.Conv(
+            num_spatial_dims=num_spatial_dim,
+            in_channels=hidden_channels,
+            out_channels=1,
+            kernel_size=kernel_size,
+            stride=1,
+            padding="SAME",
+            padding_mode="CIRCULAR",
+            key=key2,
+        )
 
     @jaxtyped(typechecker=typechecker)
-    def __call__(self, Hu: Float[ArrayLike, " No"], y: Float[ArrayLike, " No"]):
-        x = Hu - y
-        for layer in self.layers[:-1]:
-            x = jnp.tanh(self.w0 * layer(x))
-        return self.layers[-1](x).squeeze()
+    def __call__(
+        self,
+        Hu: Float[ArrayLike, "*No"],
+        y: Float[ArrayLike, "*No"],
+    ):
+        return self.decoder(jax.nn.swish(self.encoder((Hu - y)[None, ...]))).squeeze()
 
 
 class AutoEncoder(eqx.Module):
@@ -111,55 +131,35 @@ class AutoEncoder(eqx.Module):
         return self.decoders[-1](x).squeeze()
 
 
-class SimpleCorrector(BaseCorrector):
-    """
-    Circular padding if periodic spatial domain.
-
-    net = input -> Conv -> activation -> ConvTransposed
-    """
-
-    encoder: eqx.nn.Conv
-    decoder: eqx.nn.ConvTranspose
+class MultiLayerPerceptron(eqx.Module):
+    layers: list
+    w0: jnp.ndarray = eqx.field(static=True)
 
     def __init__(
         self,
         *,
-        num_spatial_dim: int = 1,
-        hidden_channels: int = 32,
-        kernel_size: int = 4,
-        stride: int = 1,
+        d_in: Union[str, int] = 2,
+        width: int = 32,
+        depth: int = 4,
+        d_out: Union[str, int] = "scalar",
         key: PRNGKeyArray = jr.key(4321),
+        w0: float = 10.0,
     ):
-        key1, key2 = jr.split(key)
-
-        self.encoder = eqx.nn.ConvTranspose(
-            num_spatial_dims=num_spatial_dim,
-            in_channels=1,
-            out_channels=hidden_channels,
-            kernel_size=kernel_size,
-            stride=stride,
-            padding="SAME",
-            padding_mode="ZEROS",
-            key=key1,
-        )
-        self.decoder = eqx.nn.Conv(
-            num_spatial_dims=num_spatial_dim,
-            in_channels=hidden_channels,
-            out_channels=1,
-            kernel_size=kernel_size,
-            stride=1,
-            padding="SAME",
-            padding_mode="CIRCULAR",
-            key=key2,
-        )
+        layers = [d_in] + [width] * (depth - 1) + [d_out]
+        keys = jr.split(key, depth)
+        self.layers = [
+            eqx.nn.Linear(_in, _out, key=_k)
+            for _in, _out, _k in zip(layers[:-1], layers[1:], keys)
+        ]
+        self.w0 = jnp.array(w0)
+        # self = convert_mlp_to_siren(self)
 
     @jaxtyped(typechecker=typechecker)
-    def __call__(
-        self,
-        Hu: Float[ArrayLike, "*No"],
-        y: Float[ArrayLike, "*No"],
-    ):
-        return self.decoder(jax.nn.swish(self.encoder((Hu - y)[None, ...]))).squeeze()
+    def __call__(self, Hu: Float[ArrayLike, " No"], y: Float[ArrayLike, " No"]):
+        x = Hu - y
+        for layer in self.layers[:-1]:
+            x = jnp.tanh(self.w0 * layer(x))
+        return self.layers[-1](x).squeeze()
 
 
 def siren_init(mlp: MultiLayerPerceptron, key: PRNGKeyArray = jr.key(4123)):
