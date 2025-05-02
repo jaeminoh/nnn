@@ -8,7 +8,7 @@ import jaxopt
 import matplotlib.pyplot as plt
 
 from oda.models import Lorenz96, _rk4
-from oda.networks import SimpleCorrector as Net
+from oda.networks import DNO as Net
 from oda.utils import DataLoader, _solve, rmse
 
 
@@ -16,9 +16,9 @@ def main(
     lr0: float = 1e-3,
     epoch: int = 50,
     noise_level: int = 1,
-    rank: int = 32,
+    rank: int = 40,
     include_training: bool = True,
-    sensor_every: int = 4,
+    sensor_every: int = 2,
     test_unroll_length: int = 100,
     Nx: int = 40,
 ):
@@ -96,7 +96,7 @@ def main(
     plt.legend()
     plt.tight_layout()
     plt.savefig(fname + "_analysis.pdf")
-    print(f"""RMSE: {rmse(uu_analysis - uu)}""")
+    print(f"""aRMSE: {rmse(uu_analysis, uu)}""")
 
 
 if __name__ == "__main__":

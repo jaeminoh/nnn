@@ -11,8 +11,13 @@ from oda.data_utils import DataLoader, Solution
 from oda.filters import BaseFilter
 
 
-def nrmse(uu):
-    return jnp.sqrt((jax.vmap(jnp.linalg.norm)(uu) ** 2).mean()) / (uu.max() - uu.min())
+def rmse(uu_pred, uu, normalize: bool = False) :
+    ee = jax.vmap(jnp.linalg.norm)(uu_pred - uu)
+    if normalize:
+        ee = ee / jax.vmap(jnp.linalg.norm)(uu)
+    else:
+        ee = ee / np.sqrt(uu.shape[1])
+    return ee.mean()
 
 
 def test_on(

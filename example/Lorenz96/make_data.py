@@ -10,7 +10,7 @@ jax.config.update("jax_enable_x64", True)
 jax.config.update("jax_platform_name", "cpu")
 
 
-def main(Nx: int = 128, draw_plot: bool = False):
+def main(Nx: int = 40, Ne: int = 40, draw_plot: bool = False):
     if not os.path.isdir("data"):
         os.mkdir("data")
 
@@ -20,7 +20,7 @@ def main(Nx: int = 128, draw_plot: bool = False):
     A numerical solver of Lorenz 96 model
     """
     # initial condition
-    u0 = np.ones((Nx,)) * 8
+    u0 = np.random.randn((Ne, Nx))
     u0[0] += 0.01
 
     # time steps
@@ -32,18 +32,22 @@ def main(Nx: int = 128, draw_plot: bool = False):
     prob = dfx.ODETerm(lambda t, u, args: lorenz96(u))
 
     # solve!
-    sol = dfx.diffeqsolve(
-        prob,
-        dfx.Dopri8(),
-        t0=0.0,
-        t1=318.0,
-        dt0=1e-2,
-        y0=u0,
-        saveat=saveat,
-        stepsize_controller=dfx.PIDController(rtol=1e-9, atol=1e-9),
-        max_steps=int(1e6),
-    )
-    uu = sol.ys
+    def solve(u0):
+        sol = dfx.diffeqsolve(
+            prob,
+            dfx.Dopri8(),
+            t0=0.0,
+            t1=318.0,
+            dt0=1e-2,
+            y0=u0,
+            saveat=saveat,
+            stepsize_controller=dfx.PIDController(rtol=1e-9, atol=1e-9),
+            max_steps=int(1e6),
+        )
+        uu = sol.ys
+        return uu
+    
+    uu = solve(np.concatenate([np.ones((1,))*8.01, np.ones((39,))*8]))
 
     np.savez("data/train.npz", tt=tt[80:-100], sol=uu[80:-100])
     np.savez("data/test.npz", tt=tt[-101:], sol=uu[-101:])

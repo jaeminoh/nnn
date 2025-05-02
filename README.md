@@ -56,14 +56,3 @@ Combination (Assimilation):
 
 https://github.com/user-attachments/assets/b9ff6202-f799-47de-b40c-89899b23bb08
 
-
-## How to install pandoc
-pandoc is necessary for bibtex.
-
-1. `pip install pypandoc`
-2. run Python REPL and type:
-```python
-from pypandoc.pandoc_download import download_pandoc
-
-download_pandoc()
-```

@@ -47,9 +47,9 @@ def main(
     uu.save(fname + "_test2")
     visualize(uu, loss_traj, fname=fname + "_test2")
 
-    print(f"""RMSE.
-          w/o assimilation: {rmse(uu.baseline - uu.reference)}
-          w/  assimilation: {rmse(uu.forecast - uu.reference)}""")
+    print(f"""anRMSE.
+          w/o assimilation: {rmse(uu.baseline, uu.reference, normalize=True)}
+          w/  assimilation: {rmse(uu.forecast, uu.reference, normalize=True)}""")
 
 
 if __name__ == "__main__":
