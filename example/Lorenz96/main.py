@@ -16,7 +16,7 @@ def main(
     include_training: bool = True,
     sensor_every: int = 1,
     test_unroll_length: int = 100,
-    Nx: int = 128,
+    Nx: int = 40,
 ):
     fname = f"lorenz_lr{lr0}_epoch{epoch}_noise{noise_level}_rank{rank}"
     print(fname)
@@ -47,9 +47,9 @@ def main(
     uu.save(fname + "_test")
     visualize(uu, loss_traj, fname=fname + "_test")
 
-    print(f"""RMSE.
-          w/o assimilation: {rmse(uu.baseline - uu.reference)}
-          w/  assimilation: {rmse(uu.forecast - uu.reference)}""")
+    print(f"""aRMSE.
+          w/o assimilation: {rmse(uu.baseline, uu.reference, normalize=False)}
+          w/  assimilation: {rmse(uu.forecast, uu.reference, normalize=False)}""")
 
 
 if __name__ == "__main__":

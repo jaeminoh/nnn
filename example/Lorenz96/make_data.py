@@ -20,8 +20,8 @@ def main(Nx: int = 40, Ne: int = 40, draw_plot: bool = False):
     A numerical solver of Lorenz 96 model
     """
     # initial condition
-    u0 = np.random.randn((Ne, Nx))
-    u0[0] += 0.01
+    #u0 = np.random.randn((Ne, Nx))
+    #u0[0] += 0.01
 
     # time steps
     tt = np.arange(0, 318 + 0.1, 0.1)

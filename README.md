@@ -4,10 +4,10 @@
 
 
 ## Setup
-1. clone this repository `git clone https://github.com/jaeminoh/DALS.git`
+1. clone this repository.
 2. enter to the directory: `cd oda`
-3. install via pip: `pip install -e .`
-4. install dependencies: `pip install -r requirements.txt`
+3. install uv.
+4. setup via `. setup.sh` or `source setup.sh` (aliases)
 
 ## Examples
 1. `cd Lorenz96` or `cd Kursiv`

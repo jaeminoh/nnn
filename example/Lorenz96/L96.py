@@ -1,3 +1,5 @@
+import os
+
 import jax
 import jax.numpy as jnp
 import equinox as eqx
@@ -27,10 +29,14 @@ def main(
 
     model = Lorenz96(d_in=1, Nx=Nx, sensor_every=sensor_every, inner_steps=10, dt=0.1)
 
-    net = Net(
-        hidden_channels=rank, kernel_size=5, stride=sensor_every, num_spatial_dim=1
-    )
-    data_loader = DataLoader(model.observe, noise_level=noise_level)
+    net = Net(num_channels=rank, stride=sensor_every)
+    try:
+        data_loader = DataLoader(model.observe, noise_level=noise_level)
+    except FileNotFoundError:
+        os.system("python make_data.py")
+        data_loader = DataLoader(model.observe, noise_level=noise_level)
+
+
 
     @jaxtyped(typechecker=typechecker)
     def _step(
@@ -39,8 +45,8 @@ def main(
         y: Float[ArrayLike, " No"],
         dt: float = model.dt,
     ) -> Float[ArrayLike, " Nx"]:
-        Hu = model.observe(u0)
-        return _rk4(lambda u: model(u) + net(Hu, y), u0, dt)  # uhat
+        #Hu = model.observe(u0)
+        return _rk4(lambda u: model(u) + net(u, y - model.observe(u)), u0, dt)  # uhat
 
     def _forecast(net, u0, y, dt):
         u = _step(net, u0, y, dt)
