@@ -5,4 +5,4 @@ CUDA_VISIBLE_DEVICES=7
 
 cd example/Lorenz96
 #python L96.py --epoch=50 --noise_level=5 --sensor_every=1
-python main.py --epoch=100 --noise_level=5 --sensor_every=1
+python main.py --epoch=500 --noise_level=38 --sensor_every=2 --rank=128

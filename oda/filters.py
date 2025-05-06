@@ -81,7 +81,8 @@ class ClassicFilter(BaseFilter):
         super().__init__(**basefilter_kwargs)
 
     def analysis(self, net, u_f, y):  # first order operator splitting
-        return u_f + net(self.observe(u_f), y) * self.model.dt * self.model.inner_steps
+        #return u_f + net(self.observe(u_f), y) * self.model.dt * self.model.inner_steps
+        return u_f + net(u_f, y - self.observe(u_f)) * self.model.dt * self.model.inner_steps
 
     def _compute_loss(
         self, net, u0: Float[ArrayLike, " *Nx"], yy: Float[ArrayLike, " Nt ..."]

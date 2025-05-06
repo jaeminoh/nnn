@@ -4,7 +4,7 @@ import optax
 
 from oda.filters import ClassicFilter as Filter
 from oda.models import Lorenz96
-from oda.networks import SimpleCorrector as Net
+from oda.networks import DNO as Net
 from oda.utils import DataLoader, Optimization, test_on, visualize, rmse
 
 
@@ -22,10 +22,10 @@ def main(
     print(fname)
     model = Lorenz96(d_in=1, Nx=Nx, sensor_every=sensor_every, inner_steps=10)
     filter = Filter(model=model, observe=model.observe)
-    net = Net(
-        hidden_channels=rank, kernel_size=5, stride=sensor_every, num_spatial_dim=1
-    )
-    # net = Net(d_in=Nx // sensor_every, width=rank, depth=2, d_out=Nx, w0=5.0)
+    #net = Net(
+    #    hidden_channels=rank, kernel_size=5, stride=sensor_every, num_spatial_dim=1
+    #)
+    net = Net(stride=sensor_every, Nx=Nx, num_channels=rank)
     data_loader = DataLoader(model.observe, noise_level=noise_level)
 
     if include_training:

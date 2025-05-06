@@ -41,7 +41,7 @@ class SimpleCorrector(BaseCorrector):
             kernel_size=kernel_size,
             stride=stride,
             padding="SAME",
-            padding_mode="ZEROS",
+            padding_mode="CIRCULAR",
             key=key1,
         )
         self.decoder = eqx.nn.Conv(
@@ -182,7 +182,7 @@ class AutoEncoder(eqx.Module):
                 kernel_size,
                 _s,
                 padding="SAME",
-                padding_mode="ZEROS",
+                padding_mode="CIRCULAR",
                 key=_k,
             )
             for (_in, _out, _s, _k) in zip(
