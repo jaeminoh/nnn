@@ -56,7 +56,7 @@ class BaseFilter:
 
     @jaxtyped(typechecker=typechecker)
     def compute_loss(
-        self, net, u0: Float[ArrayLike, " Ne *Nx"], yy: Float[ArrayLike, " Ne Nt *No"]
+        self, net, u0: Float[ArrayLike, " Ne *Nx"], uu: Float[ArrayLike, " Ne Nt *Nx"], yy: Float[ArrayLike, " Ne Nt *No"]
     ) -> Float[ArrayLike, ""]:
         """
         Loss function motivated by the 4DVAR method.
@@ -69,20 +69,47 @@ class BaseFilter:
         **returns**
         - loss: mean squared error of the fit
         """
-        j0, j1 = jax.vmap(lambda u0, yy: self._compute_loss(net, u0, yy), (0, 0))(
-            u0, yy
+        j0, j1 = jax.vmap(lambda u0, uu, yy: self._compute_loss(net, u0, uu, yy))(
+            u0, uu, yy
         )
-        # return (j0**2).mean() + (j1**2).mean()
+        #return (j0**2).mean() + (j1**2).mean()
         return (j0**2).mean()
 
 
 class ClassicFilter(BaseFilter):
-    def __init__(self, **basefilter_kwargs):
+    def __init__(self, loss_type: int = "supervised", **basefilter_kwargs):
         super().__init__(**basefilter_kwargs)
+        if loss_type == "self_supervised":
+            self._compute_loss = self._self_supervised_loss
+        elif loss_type == "supervised":
+            self._compute_loss = self._supervised_loss
 
     def analysis(self, net, u_f, y):  # first order operator splitting
         #return u_f + net(self.observe(u_f), y) * self.model.dt * self.model.inner_steps
         return u_f + net(u_f, y - self.observe(u_f)) * self.model.dt * self.model.inner_steps
+    
+    def _self_supervised_loss(self, net,
+                              u0: Float[ArrayLike, " *Nx"],
+                              uu: Float[ArrayLike, " Nt ..."],
+                              yy: Float[ArrayLike, " Nt ..."]
+    ) -> tuple[Float[ArrayLike, "..."], Float[ArrayLike, " Nt-1 ..."]]:
+        u_f, u_a = self.unroll(net, u0, yy)
+        j0 = self.observe(u_a[0]) - yy[0]
+        j1 = jax.vmap(self.observe)(u_f[1:]) - yy[1:]
+        return j0, j1
+    
+    def _supervised_loss(self,
+                 net,
+                 u0: Float[ArrayLike, " *Nx"],
+                 uu: Float[ArrayLike, " Nt ..."],
+                 yy: Float[ArrayLike, " Nt ..."]
+                 ) -> tuple[Float[ArrayLike, "..."], Float[ArrayLike, " Nt-1 ..."]]:
+        u_f, u_a = self.unroll(net, u0, yy)
+        j0 = u_a[0] - uu[0]
+        j1 = u_f[1:] - uu[1:]
+        return j0, j1
+
+
 
     def _compute_loss(
         self, net, u0: Float[ArrayLike, " *Nx"], yy: Float[ArrayLike, " Nt ..."]

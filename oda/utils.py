@@ -68,6 +68,7 @@ def visualize(
     for i, ax in zip(indices, axs1[:-1]):
         ax.plot(uu.tt[1:], uu.reference[:, i], label="Reference", linewidth=3)
         ax.plot(uu.tt[1:], uu.forecast[:, i], ":", label="Forecast", linewidth=2)
+        ax.plot(uu.tt[1:], uu.observation[:, i], "--", label="Observation", linewidth=1)
         ax.set_xlabel(r"$t$")
         ax.set_ylabel(r"$u(x_i)$")
         ax.set_title(f"{i}th position")
@@ -107,10 +108,9 @@ class Optimization:
         """
         solver = jaxopt.OptaxSolver(filter.compute_loss, self.algorithm)
 
-        u0, yy = data
-        state = solver.init_state(net, u0, yy)
+        state = solver.init_state(net, *data)
         net, state, loss_traj = _solve(
-            solver.update, net, state, u0, yy, maxiter=self.epoch
+            solver.update, net, state, *data, maxiter=self.epoch
         )
 
         eqx.tree_serialise_leaves(f"data/{fname}.eqx", net)  # save checkpoint

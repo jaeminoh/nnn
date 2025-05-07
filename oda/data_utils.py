@@ -49,7 +49,9 @@ class DataLoader:
     def load_train(
         self, unroll_length: int = 50, seed: int = 0, max_ens_size=None
     ) -> tuple[
-        Float[ArrayLike, " ens *Nx"], Float[ArrayLike, " ens {unroll_length} *No"]
+        Float[ArrayLike, " ens *Nx"],
+        Float[ArrayLike, " ens {unroll_length} *Nx"],
+        Float[ArrayLike, " ens {unroll_length} *No"]
     ]:
         """
         Load a single long time series as an *ensemble* of short time series.
@@ -82,13 +84,12 @@ class DataLoader:
         assert np.allclose(u0[1:], uu_ref[:-1, -1]), "index error!"
 
         u0 = _add_noise(u0, noise_level=self.noise_level)
-        uu_ref = jax.vmap(jax.vmap(self.observe))(uu_ref)
-        yy = _add_noise(uu_ref, noise_level=self.noise_level)
+        yy = _add_noise(jax.vmap(jax.vmap(self.observe))(uu_ref), noise_level=self.noise_level)
 
         if max_ens_size:
             u0 = u0[:max_ens_size]
             yy = yy[:max_ens_size]
-        return u0, yy
+        return u0, uu_ref, yy
 
     def load_test(self, fname: str, unroll_length: int, seed: int = 1):
         np.random.seed(seed)
@@ -102,5 +103,5 @@ class DataLoader:
         return tt, u0, uu, yy
 
 
-def _add_noise(target, noise_level: int = 0):
+def _add_noise(target, noise_level: int = 38):
     return target + 0.01 * noise_level * np.random.randn(*target.shape)

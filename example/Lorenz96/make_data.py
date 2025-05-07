@@ -20,8 +20,8 @@ def main(Nx: int = 40, Ne: int = 40, draw_plot: bool = False):
     A numerical solver of Lorenz 96 model
     """
     # initial condition
-    #u0 = np.random.randn((Ne, Nx))
-    #u0[0] += 0.01
+    u0 = np.ones((Nx,)) * 8.0
+    u0[0] += 0.01
 
     # time steps
     tt = np.arange(0, 318 + 0.1, 0.1)
@@ -47,7 +47,7 @@ def main(Nx: int = 40, Ne: int = 40, draw_plot: bool = False):
         uu = sol.ys
         return uu
     
-    uu = solve(np.concatenate([np.ones((1,))*8.01, np.ones((39,))*8]))
+    uu = solve(u0)
 
     np.savez("data/train.npz", tt=tt[80:-100], sol=uu[80:-100])
     np.savez("data/test.npz", tt=tt[-101:], sol=uu[-101:])

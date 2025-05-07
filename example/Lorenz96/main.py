@@ -29,7 +29,7 @@ def main(
     data_loader = DataLoader(model.observe, noise_level=noise_level)
 
     if include_training:
-        opt = Optimization(lr0=lr0, algorithm=optax.lion, epoch=epoch)
+        opt = Optimization(lr0=lr0, algorithm=optax.adamw, epoch=epoch)
         train_data = data_loader.load_train(unroll_length=10)
         net, loss_traj = opt.solve(fname, filter, net, train_data)
     else:
