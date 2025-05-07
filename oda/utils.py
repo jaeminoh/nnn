@@ -68,7 +68,7 @@ def visualize(
     for i, ax in zip(indices, axs1[:-1]):
         ax.plot(uu.tt[1:], uu.reference[:, i], label="Reference", linewidth=3)
         ax.plot(uu.tt[1:], uu.forecast[:, i], ":", label="Forecast", linewidth=2)
-        ax.plot(uu.tt[1:], uu.observation[:, i], "--", label="Observation", linewidth=1)
+        #ax.plot(uu.tt[1:], uu.observation[:, i], "--", label="Observation", linewidth=1)
         ax.set_xlabel(r"$t$")
         ax.set_ylabel(r"$u(x_i)$")
         ax.set_title(f"{i}th position")

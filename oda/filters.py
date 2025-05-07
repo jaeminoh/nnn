@@ -72,8 +72,8 @@ class BaseFilter:
         j0, j1 = jax.vmap(lambda u0, uu, yy: self._compute_loss(net, u0, uu, yy))(
             u0, uu, yy
         )
-        #return (j0**2).mean() + (j1**2).mean()
-        return (j0**2).mean()
+        return (j0**2).mean() + (j1**2).mean()
+        #return (j0**2).mean()
 
 
 class ClassicFilter(BaseFilter):
@@ -107,16 +107,6 @@ class ClassicFilter(BaseFilter):
         u_f, u_a = self.unroll(net, u0, yy)
         j0 = u_a[0] - uu[0]
         j1 = u_f[1:] - uu[1:]
-        return j0, j1
-
-
-
-    def _compute_loss(
-        self, net, u0: Float[ArrayLike, " *Nx"], yy: Float[ArrayLike, " Nt ..."]
-    ) -> tuple[Float[ArrayLike, "..."], Float[ArrayLike, " Nt-1 ..."]]:
-        u_f, u_a = self.unroll(net, u0, yy)
-        j0 = self.observe(u_a[0]) - yy[0]
-        j1 = jax.vmap(self.observe)(u_f[1:]) - yy[1:]
         tt = jnp.arange(yy.shape[0] - 1)
         return j0, j1 * tt[:, None]
 

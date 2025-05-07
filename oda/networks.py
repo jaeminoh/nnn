@@ -66,6 +66,30 @@ class SimpleCorrector(BaseCorrector):
 
 class MultiLayerPerceptron(eqx.Module):
     layers: list
+
+    def __init__(
+        self,
+        d_in: Union[str, int] = 2,
+        width: int = 32,
+        depth: int = 4,
+        d_out: Union[str, int] = "scalar",
+        key: PRNGKeyArray = jr.key(4321),
+    ):
+        layers = [d_in] + [width] * (depth - 1) + [d_out]
+        keys = jr.split(key, depth)
+        self.layers = [
+            eqx.nn.Linear(_in, _out, key=_k)
+            for _in, _out, _k in zip(layers[:-1], layers[1:], keys)
+        ]
+
+    def __call__(self, x):
+        for layer in self.layers[:-1]:
+            x = jax.nn.tanh(layer(x))
+        return self.layers[-1](x).squeeze()
+
+
+class Siren(MultiLayerPerceptron):
+    layers: list
     w0: jnp.ndarray = eqx.field(static=True)
 
     def __init__(
@@ -78,12 +102,7 @@ class MultiLayerPerceptron(eqx.Module):
         key: PRNGKeyArray = jr.key(4321),
         w0: float = 10.0,
     ):
-        layers = [d_in] + [width] * (depth - 1) + [d_out]
-        keys = jr.split(key, depth)
-        self.layers = [
-            eqx.nn.Linear(_in, _out, key=_k)
-            for _in, _out, _k in zip(layers[:-1], layers[1:], keys)
-        ]
+        super().__init__(d_in, width, depth, d_out, key)
         self.w0 = jnp.array(w0)
         self = convert_mlp_to_siren(self)
 
@@ -173,7 +192,7 @@ class AutoEncoder(eqx.Module):
     ):
         key1, key2 = jr.split(key)
         hidden_channels_list = [1] + [num_channels] * 3
-        strides_list = [1, 1, stride]
+        strides_list = [stride]
         self.encoders = [
             eqx.nn.ConvTranspose(
                 num_spatial_dim,
@@ -213,9 +232,9 @@ class AutoEncoder(eqx.Module):
     ):
         x = y[None]
         for encoder in self.encoders:
-            x = jax.nn.swish(encoder(x))
+            x = jax.nn.tanh(encoder(x))
         for decoder in self.decoders[:-1]:
-            x = jax.nn.swish(decoder(x))
+            x = jax.nn.tanh(decoder(x))
         return self.decoders[-1](x).squeeze()
 
 
@@ -225,7 +244,7 @@ class DNO(eqx.Module):
 
     def __init__(self, stride: int = 2, Nx: int = 40, num_channels: int = 40, key = jr.key(4321)):
         key_b, key_t = jr.split(key)
-        self.branch = MultiLayerPerceptron(d_in=Nx, d_out=num_channels, key=key_b)
+        self.branch = MultiLayerPerceptron(d_in=Nx, d_out=num_channels, key=key_b, depth=2)
         self.trunk = AutoEncoder(
             num_channels=num_channels,
             kernel_size=3,
@@ -236,7 +255,7 @@ class DNO(eqx.Module):
     @jaxtyped(typechecker=typechecker)
     def __call__(self, u: Float[ArrayLike, "*Nx"], y: Float[ArrayLike, "*No"]) -> Float[ArrayLike, "*Nx"]:
         branch = self.branch(u) # (num_channels,)
-        trunk = self.trunk(y) # num_channels x (No * stride)?
+        trunk = self.trunk(y) # num_channels x (No * stride)
         return branch @ trunk # (No * stride,)
 
 
