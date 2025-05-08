@@ -1,7 +1,9 @@
 import equinox as eqx
 import numpy as np
 import optax
-
+import jax
+import jax.numpy as jnp
+import matplotlib.pyplot as plt
 from oda.filters import ClassicFilter as Filter
 from oda.models import Lorenz96
 from oda.networks import DNO as Net
@@ -47,9 +49,27 @@ def main(
     uu.save(fname + "_test")
     visualize(uu, loss_traj, fname=fname + "_test")
 
-    print(f"""aRMSE.
-          w/o assimilation: {rmse(uu.baseline, uu.reference, normalize=False)}
-          w/  assimilation: {rmse(uu.forecast, uu.reference, normalize=False)}""")
+    plt.cla()
+    plt.figure()
+    norm_reference = jax.vmap(jnp.linalg.norm)(uu.reference)
+    err_baseline = jax.vmap(jnp.linalg.norm)(uu.baseline - uu.reference) / norm_reference
+    err_forecast = jax.vmap(jnp.linalg.norm)(uu.forecast - uu.reference) / norm_reference
+    plt.semilogy(uu.tt[1:], err_baseline, label="without assimilation")
+    plt.semilogy(uu.tt[1:], err_forecast, "--", label="with assimilation")
+    plt.xlabel("time")
+    plt.ylabel(r"Relative $L^2$ error")
+    plt.tight_layout()
+    plt.legend()
+    plt.savefig("data/" + fname + "_err.pdf", dpi=300)
+
+    print(f"""
+          RMSE.
+          w/o assimilation: {rmse(uu.baseline, uu.reference)}
+          w/  assimilation: {rmse(uu.forecast, uu.reference)}
+
+          nRMSE.
+          w/o assimilation: {rmse(uu.baseline, uu.reference, normalize=True)}
+          w/  assimilation: {rmse(uu.forecast, uu.reference, normalize=True)}""")
 
 
 if __name__ == "__main__":

@@ -6,4 +6,4 @@ export CUDA_VISIBLE_DEVICES=5
 
 cd example/Lorenz96
 #python L96.py --epoch=50 --noise_level=5 --sensor_every=1
-python main.py --epoch=300 --noise_level=100 --sensor_every=2 --rank=20
+python main.py --epoch=300 --noise_level=100 --sensor_every=2 --rank=20 --include_training=False

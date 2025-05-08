@@ -43,6 +43,7 @@ def visualize(
     fname: str = "base",
 ) -> None:
     "Visualization to assess the quality of solution."
+    plt.cla()
     _, (axs0, axs1) = plt.subplots(ncols=3, nrows=2, figsize=(12, 8))
     plt.suptitle(fname)
 
