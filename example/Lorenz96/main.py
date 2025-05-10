@@ -13,12 +13,13 @@ from oda.utils import DataLoader, Optimization, test_on, visualize, rmse
 def main(
     lr0: float = 1e-3,
     epoch: int = 200,
-    noise_level: int = 36,
+    noise_level: float = 0.364,
     rank: int = 64,
     include_training: bool = True,
     sensor_every: int = 1,
     test_unroll_length: int = 100,
     Nx: int = 40,
+    unroll_length: int = 15,
 ):
     fname = f"lorenz_lr{lr0}_epoch{epoch}_noise{noise_level}_rank{rank}"
     print(fname)
@@ -33,7 +34,7 @@ def main(
 
     if include_training:
         opt = Optimization(lr0=lr0, algorithm=optax.adamw, epoch=epoch)
-        train_data = data_loader.load_train(unroll_length=assimilation_window)
+        train_data = data_loader.load_train(unroll_length=unroll_length)
         net, loss_traj = opt.solve(fname, filter, net, train_data)
     else:
         net = eqx.tree_deserialise_leaves(f"data/{fname}.eqx", net)

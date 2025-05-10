@@ -41,7 +41,8 @@ class DataLoader:
     - `yy`: simulated noisy observation, by adding Gaussian noise to `uu_ref`.
     """
 
-    def __init__(self, observe: ObservationOperator, noise_level: int = 100):
+    def __init__(self, observe: ObservationOperator, noise_level: float = 0.364):
+        
         self.observe = observe
         self.noise_level = noise_level
 
@@ -103,5 +104,5 @@ class DataLoader:
         return tt, u0, uu, yy
 
 
-def _add_noise(target, noise_level: int = 38):
-    return target + 0.01 * noise_level * np.random.randn(*target.shape)
+def _add_noise(target, noise_level: float = 0.364):
+    return target + noise_level * np.random.randn(*target.shape)
