@@ -10,12 +10,13 @@ jax.config.update("jax_enable_x64", True)
 jax.config.update("jax_platform_name", "cpu")
 
 
-def main(Nx: int = 40, Ne: int = 40, draw_plot: bool = False):
+def main(Nx: int = 40, draw_plot: bool = False, forcing: int = 8):
     if not os.path.isdir("data"):
+        print("no data directory, create one")
         os.mkdir("data")
 
     print(f"check precision: {jax.numpy.ones(()).dtype}")
-    print(f"Nx: {Nx}, draw plot: {draw_plot}")
+    print(f"Nx: {Nx}, draw plot: {draw_plot}, forcing: {forcing}")
     """
     A numerical solver of Lorenz 96 model
     """
@@ -24,7 +25,7 @@ def main(Nx: int = 40, Ne: int = 40, draw_plot: bool = False):
     u0[0] += 0.01
 
     # time steps
-    tt = np.arange(0, 318 + 0.1, 0.1)
+    tt = np.arange(0, 315 + 0.15, 0.15)
     saveat = dfx.SaveAt(ts=tt)
 
     # ode problem
@@ -36,8 +37,8 @@ def main(Nx: int = 40, Ne: int = 40, draw_plot: bool = False):
         sol = dfx.diffeqsolve(
             prob,
             dfx.Dopri8(),
-            t0=0.0,
-            t1=318.0,
+            t0=tt[0],
+            t1=tt[-1],
             dt0=1e-2,
             y0=u0,
             saveat=saveat,
@@ -49,10 +50,10 @@ def main(Nx: int = 40, Ne: int = 40, draw_plot: bool = False):
     
     uu = solve(u0)
 
-    np.savez("data/train.npz", tt=tt[80:-100], sol=uu[80:-100])
-    np.savez("data/test.npz", tt=tt[-101:], sol=uu[-101:])
-    print(f"train data shape: {uu[80:-100].shape}")
-    print(f"test data shape: {uu[-101:].shape}")
+    np.savez("data/train.npz", tt=tt[80:-400], sol=uu[80:-400])
+    np.savez("data/test.npz", tt=tt[-401:], sol=uu[-401:])
+    print(f"train data shape: {uu[80:-400].shape}")
+    print(f"test data shape: {uu[-401:].shape}")
 
     if draw_plot:
         import matplotlib.pyplot as plt

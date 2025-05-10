@@ -22,7 +22,8 @@ def main(
 ):
     fname = f"lorenz_lr{lr0}_epoch{epoch}_noise{noise_level}_rank{rank}"
     print(fname)
-    model = Lorenz96(d_in=1, Nx=Nx, sensor_every=sensor_every, inner_steps=10)
+    assimilation_window = 15
+    model = Lorenz96(d_in=1, Nx=Nx, sensor_every=sensor_every, inner_steps=assimilation_window)
     filter = Filter(model=model, observe=model.observe)
     #net = Net(
     #    hidden_channels=rank, kernel_size=5, stride=sensor_every, num_spatial_dim=1
@@ -32,7 +33,7 @@ def main(
 
     if include_training:
         opt = Optimization(lr0=lr0, algorithm=optax.adamw, epoch=epoch)
-        train_data = data_loader.load_train(unroll_length=10)
+        train_data = data_loader.load_train(unroll_length=assimilation_window)
         net, loss_traj = opt.solve(fname, filter, net, train_data)
     else:
         net = eqx.tree_deserialise_leaves(f"data/{fname}.eqx", net)

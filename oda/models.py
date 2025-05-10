@@ -59,6 +59,7 @@ class Lorenz96(DynamicalCore):
         Nx: int = 128,
         dt: float = 1e-2,
         inner_steps: int = 1,
+        forcing: float = 8.0,
         **kwargs,
     ):
         super().__init__(d_in=d_in, Nx=Nx, dt=dt, inner_steps=inner_steps, **kwargs)
@@ -66,10 +67,11 @@ class Lorenz96(DynamicalCore):
         self.ii_plus_1 = np.mod(ii + 1, self.Nx)
         self.ii_minus_1 = np.mod(ii - 1, self.Nx)
         self.ii_minus_2 = np.mod(ii - 2, self.Nx)
+        self.forcing = forcing
 
-    def __call__(self, u, forcing: float = 8.0):
+    def __call__(self, u):
         return (
-            (u[self.ii_plus_1] - u[self.ii_minus_2]) * u[self.ii_minus_1] - u + forcing
+            (u[self.ii_plus_1] - u[self.ii_minus_2]) * u[self.ii_minus_1] - u + self.forcing
         )
 
     def _step(self, u0):
