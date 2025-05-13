@@ -6,12 +6,15 @@ import matplotlib.pyplot as plt
 import numpy as np
 import optax
 from tqdm import trange
+from jaxtyping import Float, ArrayLike, jaxtyped, Scalar
+from beartype import beartype as typechecker
 
 from oda.data_utils import DataLoader, Solution
 from oda.filters import BaseFilter
 
 
-def rmse(uu_pred, uu, normalize: bool = False) :
+@jaxtyped(typechecker=typechecker)
+def rmse(uu_pred: Float[ArrayLike, "Nt *Nx"], uu: Float[ArrayLike, "Nt *Nx"], normalize: bool = False) -> Scalar:
     ee = jax.vmap(jnp.linalg.norm)(uu_pred - uu)
     if normalize:
         ee = ee / jax.vmap(jnp.linalg.norm)(uu)

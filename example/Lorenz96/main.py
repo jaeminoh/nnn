@@ -11,20 +11,31 @@ from oda.utils import DataLoader, Optimization, test_on, visualize, rmse
 
 
 def main(
-    lr0: float = 1e-3,
-    epoch: int = 200,
-    noise_level: float = 0.364,
-    rank: int = 64,
-    include_training: bool = True,
-    sensor_every: int = 1,
-    test_unroll_length: int = 100,
-    Nx: int = 40,
-    unroll_length: int = 15,
+        Nx: int = 40,
+        forcing: float = 8.0,
+        noise_level: float = 0.364,
+        sensor_every: int = 1,
+        rank: int = 20,
+        lr0: float = 1e-3,
+        epoch: int = 200,
+        include_training: bool = True,
+        test_unroll_length: int = 100,
+        unroll_length: int = 3,
 ):
-    fname = f"lorenz_lr{lr0}_epoch{epoch}_noise{noise_level}_rank{rank}"
-    print(fname)
+    fname = f"L96_Forcing{int(forcing)}Noise{noise_level}Obs{sensor_every}Rank{rank}Nx{Nx}"
+    print(f"""Configurations:
+          forcing: {forcing}
+          noise_level: {noise_level}
+          sensor_every: {sensor_every}
+          rank: {rank}
+          Nx: {Nx}
+          lr0: {lr0}
+          epoch: {epoch}
+          include_training: {include_training}
+          unroll_length: {unroll_length}
+          """)
     assimilation_window = 15
-    model = Lorenz96(d_in=1, Nx=Nx, sensor_every=sensor_every, inner_steps=assimilation_window)
+    model = Lorenz96(d_in=1, Nx=Nx, sensor_every=sensor_every, inner_steps=assimilation_window, forcing=forcing)
     filter = Filter(model=model, observe=model.observe)
     #net = Net(
     #    hidden_channels=rank, kernel_size=5, stride=sensor_every, num_spatial_dim=1
@@ -33,7 +44,7 @@ def main(
     data_loader = DataLoader(model.observe, noise_level=noise_level)
 
     if include_training:
-        opt = Optimization(lr0=lr0, algorithm=optax.adamw, epoch=epoch)
+        opt = Optimization(lr0=lr0, algorithm=optax.adam, epoch=epoch)
         train_data = data_loader.load_train(unroll_length=unroll_length)
         net, loss_traj = opt.solve(fname, filter, net, train_data)
     else:
@@ -65,13 +76,8 @@ def main(
     plt.savefig("data/" + fname + "_err.pdf", dpi=300)
 
     print(f"""
-          RMSE.
-          w/o assimilation: {rmse(uu.baseline, uu.reference)}
-          w/  assimilation: {rmse(uu.forecast, uu.reference)}
-
-          nRMSE.
-          w/o assimilation: {rmse(uu.baseline, uu.reference, normalize=True)}
-          w/  assimilation: {rmse(uu.forecast, uu.reference, normalize=True)}""")
+          (RMSE, nRMSE)
+          {rmse(uu.forecast, uu.reference)}, {rmse(uu.forecast, uu.reference, normalize=True)}""")
 
 
 if __name__ == "__main__":

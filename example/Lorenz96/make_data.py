@@ -10,18 +10,19 @@ jax.config.update("jax_enable_x64", True)
 jax.config.update("jax_platform_name", "cpu")
 
 
-def main(Nx: int = 40, draw_plot: bool = False, forcing: int = 8):
-    if not os.path.isdir("data"):
-        print("no data directory, create one")
-        os.mkdir("data")
-
-    print(f"check precision: {jax.numpy.ones(()).dtype}")
-    print(f"Nx: {Nx}, draw plot: {draw_plot}, forcing: {forcing}")
+def main(Nx: int = 40, draw_plot: bool = False, forcing: float = 8):
     """
     A numerical solver of Lorenz 96 model
     """
+    print(f"""Generate L96 data.
+          check precision: {jax.numpy.ones(()).dtype}
+          Nx: {Nx}, draw plot: {draw_plot}, forcing: {forcing}""")
+    if not os.path.isdir("data"):
+        print("no data directory, create one")
+        os.mkdir("data")
+    
     # initial condition
-    u0 = np.ones((Nx,)) * 8.0
+    u0 = np.ones((Nx,)) * forcing
     u0[0] += 0.01
 
     # time steps
@@ -48,7 +49,16 @@ def main(Nx: int = 40, draw_plot: bool = False, forcing: int = 8):
         uu = sol.ys
         return uu
     
-    uu = solve(u0)
+    # solve RK4
+    def solve_rk4(u0):
+        uu = [u0]
+        for i in range(1, (len(tt) - 1) * 15 + 1):
+            u0 = lorenz96._step(u0)
+            if i % 15 == 0:
+                uu.append(u0)
+        return np.stack(uu)
+
+    uu = solve_rk4(u0)
 
     np.savez("data/train.npz", tt=tt[80:-400], sol=uu[80:-400])
     np.savez("data/test.npz", tt=tt[-401:], sol=uu[-401:])

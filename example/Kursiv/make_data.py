@@ -6,12 +6,15 @@ from tqdm import trange
 
 from oda.models import Kursiv
 
+jax.config.update("jax_enable_x64", True)
+jax.config.update("jax_platform_name", "cpu")
 
-def kursiv(Nx: int = 128, M: int = 16, draw_plot: bool = False):
+
+def kursiv(Nx: int = 128, draw_plot: bool = False):
     if not os.path.isdir("data"):
         os.mkdir("data")
 
-    jax.config.update("jax_enable_x64", True)
+    
     print(f"Precision check: {jax.numpy.ones(()).dtype}")
 
     """

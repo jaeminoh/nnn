@@ -244,10 +244,10 @@ class DNO(eqx.Module):
 
     def __init__(self, stride: int = 2, Nx: int = 40, num_channels: int = 40, key = jr.key(4321)):
         key_b, key_t = jr.split(key)
-        self.branch = MultiLayerPerceptron(d_in=Nx, d_out=num_channels, key=key_b, depth=2)
+        self.branch = MultiLayerPerceptron(d_in=Nx, d_out=num_channels, key=key_b, depth=2, width=128)
         self.trunk = AutoEncoder(
             num_channels=num_channels,
-            kernel_size=3,
+            kernel_size=5,
             stride=stride,
             key=key_t,
         )
