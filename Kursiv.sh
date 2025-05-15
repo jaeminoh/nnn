@@ -10,14 +10,22 @@ unroll_length=10
 
 cd example/Kursiv
 noises=(0.25 0.375 0.5)
+methods=("etdrk4" "forward_euler")
+inner_steps=(10 50)
 
-for noise in "${noises[@]}"
+python make_data.py
+for i in {0..1}
 do
-    for sensor_every in 1 2 4
+    method=${methods[$i]}
+    inner_step=${inner_steps[$i]}
+    for noise in "${noises[@]}"
     do
-    python main.py \
-    --sensor_every=$sensor_every --rank=$rank --noise_level=$noise \
-    --include_training=True --epoch=$epoch --unroll_length=$unroll_length
+        for sensor_every in 1 2 4
+        do
+        python main.py \
+        --method=$method --inner_steps=$inner_step \
+        --sensor_every=$sensor_every --rank=$rank --noise_level=$noise \
+        --include_training=True --epoch=$epoch --unroll_length=$unroll_length
+        done
     done
 done
-

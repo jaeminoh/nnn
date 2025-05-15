@@ -15,9 +15,13 @@ def main(
         epoch: int = 300,
         include_training: bool = True,
         unroll_length: int = 3,
+        inner_steps: int = 50,
+        method: str = "forward_euler",
 ):
     fname = f"Kursiv_Noise{noise_level}Obs{sensor_every}Rank{rank}"
     print(f"""Configurations:
+          method: {method}
+          inner_steps: {inner_steps}
           noise_level: {noise_level}
           sensor_every: {sensor_every}
           rank: {rank}
@@ -26,7 +30,7 @@ def main(
           include_training: {include_training}
           unroll_length: {unroll_length}
           """)
-    model = Kursiv(sensor_every=sensor_every, d_in=1)
+    model = Kursiv(sensor_every=sensor_every, d_in=1, method=method, inner_steps=inner_steps)
     filter = Filter(model=model, observe=model.observe)
     net = Net(
         Nx=128,

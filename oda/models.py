@@ -92,11 +92,15 @@ class Kursiv(DynamicalCore):
         xr: float = 32 * np.pi,
         dt: float = 5e-3,
         inner_steps: int = 50,
+        method: str = "etdrk4",
         **kwargs,
     ):
         super().__init__(Nx=Nx, dt=dt, inner_steps=inner_steps, **kwargs)
         self.k = 2j * np.pi * jnp.fft.rfftfreq(self.Nx, (xr - xl) / self.Nx)
-        self._etdrk4_precompute()
+        self.method = method
+        print(f"time stepper: {self.method}")
+        if self.method == "etdrk4":
+            self._etdrk4_precompute()
 
     def __call__(self, u):
         linear = jnp.fft.irfft((-(self.k**2) - self.k**4) * jnp.fft.rfft(u), self.Nx)
@@ -104,8 +108,10 @@ class Kursiv(DynamicalCore):
         return linear + nonlinear
 
     def _step(self, u0):
-        # u0 + self.dt * self(u0) forward euler
-        return irfft(self._etdrk4(rfft(u0)), self.Nx)
+        if self.method == "etdrk4":
+            return irfft(self._etdrk4(rfft(u0)), self.Nx)
+        elif self.method == "forward_euler":
+            return _forward_euler(self, u0, self.dt)
 
     def _etdrk4_precompute(self):
         h = self.dt

@@ -41,11 +41,16 @@ def main(
     #    hidden_channels=rank, kernel_size=5, stride=sensor_every, num_spatial_dim=1
     #)
     net = Net(stride=sensor_every, Nx=Nx, num_channels=rank)
-    data_loader = DataLoader(model.observe, noise_level=noise_level)
+    data_loader = DataLoader(model.observe, noise_level=noise_level)  
 
     if include_training:
         opt = Optimization(lr0=lr0, algorithm=optax.adam, epoch=epoch)
         train_data = data_loader.load_train(unroll_length=unroll_length)
+        #u0, uu, _ = train_data
+        #uu = np.concatenate([u0[:,None,:], uu], axis=1)
+        #filter.mean = np.mean(uu, axis=(0,1))
+        #filter.std = np.std(uu, axis=(0,1))
+        #del u0, uu
         net, loss_traj = opt.solve(fname, filter, net, train_data)
     else:
         net = eqx.tree_deserialise_leaves(f"data/{fname}.eqx", net)

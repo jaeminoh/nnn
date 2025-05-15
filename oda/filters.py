@@ -8,9 +8,11 @@ from oda.observation import ObservationOperator
 
 
 class BaseFilter:
-    def __init__(self, model: DynamicalCore, observe: ObservationOperator):
+    def __init__(self, model: DynamicalCore, observe: ObservationOperator, mean: ArrayLike = 0.0, std: ArrayLike = 1.0):
         self.model = model
         self.observe = observe
+        self.mean = mean
+        self.std = std
 
     def analysis(self):
         """
@@ -86,7 +88,8 @@ class ClassicFilter(BaseFilter):
 
     def analysis(self, net, u_f, y):  # first order operator splitting
         #return u_f + net(self.observe(u_f), y) * self.model.dt * self.model.inner_steps
-        return u_f + net(u_f, y - self.observe(u_f)) * self.model.dt * self.model.inner_steps
+        b_in = (u_f - self.mean) / (self.std + 1e-2) # branch input normalization
+        return u_f + net(b_in, y - self.observe(u_f)) * self.model.dt * self.model.inner_steps
     
     def _self_supervised_loss(self, net,
                               u0: Float[ArrayLike, " *Nx"],
