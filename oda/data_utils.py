@@ -89,6 +89,7 @@ class DataLoader:
 
         if max_ens_size:
             u0 = u0[:max_ens_size]
+            uu_ref = uu_ref[:max_ens_size]
             yy = yy[:max_ens_size]
         return u0, uu_ref, yy
 

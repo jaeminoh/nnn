@@ -11,9 +11,9 @@ from oda.utils import DataLoader, Optimization, test_on, visualize, rmse
 
 
 def main(
-        Nx: int = 40,
-        forcing: float = 8.0,
-        noise_level: float = 0.364,
+        Nx: int,
+        forcing: float,
+        noise_level: float,
         sensor_every: int = 1,
         rank: int = 20,
         lr0: float = 1e-3,
@@ -49,7 +49,7 @@ def main(
         #u0, uu, _ = train_data
         #uu = np.concatenate([u0[:,None,:], uu], axis=1)
         #filter.mean = np.mean(uu, axis=(0,1))
-        #filter.std = np.std(uu, axis=(0,1))
+        #filter.std = np.std(uu, axis=(0,1)) + 1e-3
         #del u0, uu
         net, loss_traj = opt.solve(fname, filter, net, train_data)
     else:

@@ -7,34 +7,50 @@ import seaborn as sns
 import xarray as xr
 from make_data import KolmogorovFlow
 
-from oda.filters import ObservationTransposeFilter as Filter
-from oda.networks import ObservationTransposeCorrector as Net
-from oda.utils import DataLoader, Optimization, test_on
+from oda.filters import ClassicFilter as Filter
+from oda.networks import DNO as Net
+from oda.utils import DataLoader, Optimization, test_on,  rmse
 
 
 def main(
-    lr0: float = 1e-3,
-    epoch: int = 200,
-    noise_level: int = 75,
-    rank: int = 64,
-    include_training: bool = True,
-    sensor_every: int = 1,
+        noise_level: float = 0.75,
+        sensor_every: int = 1,
+        rank: int = 20,
+        lr0: float = 1e-3,
+        epoch: int = 300,
+        include_training: bool = True,
+        unroll_length: int = 3,
+        inner_steps: int = 10,
 ):
-    fname = f"kolmogorov_lr{lr0}_epoch{epoch}_noise{noise_level}_rank{rank}"
-    print(fname)
+    fname = f"KF_Noise{noise_level}Obs{sensor_every}Rank{rank}"
+    print(f"""Configurations:
+          inner_steps: {inner_steps}
+          noise_level: {noise_level}
+          sensor_every: {sensor_every}
+          rank: {rank}
+          lr0: {lr0}
+          epoch: {epoch}
+          include_training: {include_training}
+          unroll_length: {unroll_length}
+          """)
 
-    assimilate_every = 10
     model = KolmogorovFlow(
-        inner_steps=assimilate_every, sensor_every=sensor_every, d_in=2
+        inner_steps=inner_steps, sensor_every=sensor_every, d_in=2
     )
     filter = Filter(model=model, observe=model.observe)
     net = Net(
-        num_spatial_dim=2, hidden_channels=rank, kernel_size=10, stride=sensor_every
+        num_spatial_dims=2,
+        Nx=64,
+        stride=sensor_every,
+        num_channels=rank,
     )
+    #net = Net(
+    #    num_spatial_dim=2, hidden_channels=rank, kernel_size=10, stride=sensor_every
+    #)
     data_loader = DataLoader(model.observe, noise_level=noise_level)
 
     if include_training:
-        opt = Optimization(lr0=lr0, algorithm=optax.lion, epoch=epoch)
+        opt = Optimization(lr0=lr0, algorithm=optax.adam, epoch=epoch)
         train_data = data_loader.load_train(unroll_length=10, max_ens_size=100)
         net, _ = opt.solve(fname, filter, net, train_data)
     else:
@@ -44,9 +60,9 @@ def main(
     uu = test_on("test", filter, net, data_loader=data_loader, unroll_length=5000)
     # uu.save(fname + "_test")
 
-    print(f"""NRMSE.
-          w/o assimilation: {np.linalg.norm(uu.baseline - uu.reference) / np.linalg.norm(uu.reference)}
-          w/  assimilation: {np.linalg.norm(uu.forecast - uu.reference) / np.linalg.norm(uu.reference)}""")
+    print(f"""
+          (RMSE, nRMSE)
+          {rmse(uu.forecast, uu.reference)}, {rmse(uu.forecast, uu.reference, normalize=True)}""")
 
     # transform the trajectory into real-space and wrap in xarray for plotting
     tt = uu.tt[1:]

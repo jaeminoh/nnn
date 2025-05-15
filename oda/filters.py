@@ -88,7 +88,7 @@ class ClassicFilter(BaseFilter):
 
     def analysis(self, net, u_f, y):  # first order operator splitting
         #return u_f + net(self.observe(u_f), y) * self.model.dt * self.model.inner_steps
-        b_in = (u_f - self.mean) / (self.std + 1e-2) # branch input normalization
+        b_in = (u_f - self.mean) / self.std # branch input normalization
         return u_f + net(b_in, y - self.observe(u_f)) * self.model.dt * self.model.inner_steps
     
     def _self_supervised_loss(self, net,
@@ -111,7 +111,7 @@ class ClassicFilter(BaseFilter):
         j0 = u_a[0] - uu[0]
         j1 = u_f[1:] - uu[1:]
         tt = jnp.arange(yy.shape[0] - 1)
-        return j0, j1 * tt[:, None]
+        return j0, j1
 
 
 ##########

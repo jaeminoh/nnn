@@ -242,21 +242,22 @@ class DNO(eqx.Module):
     branch: MultiLayerPerceptron
     trunk: AutoEncoder
 
-    def __init__(self, stride: int = 2, Nx: int = 40, num_channels: int = 40, key = jr.key(4321)):
+    def __init__(self, stride: int = 2, Nx: int = 40, num_channels: int = 40, num_spatial_dims:int = 1, key = jr.key(4321)):
         key_b, key_t = jr.split(key)
-        self.branch = MultiLayerPerceptron(d_in=Nx, d_out=num_channels, key=key_b, depth=2, width=128)
+        self.branch = MultiLayerPerceptron(d_in=Nx**num_spatial_dims, d_out=num_channels, key=key_b, depth=2, width=128)
         self.trunk = AutoEncoder(
             num_channels=num_channels,
             kernel_size=5,
             stride=stride,
             key=key_t,
+            num_spatial_dim=num_spatial_dims,
         )
     
     @jaxtyped(typechecker=typechecker)
     def __call__(self, u: Float[ArrayLike, "*Nx"], y: Float[ArrayLike, "*No"]) -> Float[ArrayLike, "*Nx"]:
-        branch = self.branch(u) # (num_channels,)
+        branch = self.branch(u.ravel()) # (num_channels,)
         trunk = self.trunk(y) # num_channels x (No * stride)
-        return branch @ trunk # (No * stride,)
+        return jnp.einsum("i, i... -> ...", branch, trunk) # (num_channels,) x (num_channels x (No * stride)) -> (No * stride,)
 
 
 if __name__ == "__main__":
