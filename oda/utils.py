@@ -19,7 +19,7 @@ def rmse(uu_pred: Float[ArrayLike, "Nt *Nx"], uu: Float[ArrayLike, "Nt *Nx"], no
     if normalize:
         ee = ee / jax.vmap(jnp.linalg.norm)(uu)
     else:
-        ee = ee / np.sqrt(uu.shape[1])
+        ee = ee / np.sqrt(np.prod(uu.shape[1:]))
     return ee.mean()
 
 
