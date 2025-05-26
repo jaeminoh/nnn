@@ -62,9 +62,9 @@ def main(Nx: int = 40, draw_plot: bool = False):
     prob = dfx.ODETerm(lambda t, u, args: lorenz96(u))
 
     # solve!
-    uu = solve(prob, u0, saveat)[[0, -1]]
-    vv = solve(prob, v0, saveat)[[0, -1]]
-    np.savez("chaotic.npz", uu=uu, vv=vv)
+    uu = solve(prob, u0, saveat)[np.array([0, -1])]
+    vv = solve(prob, v0, saveat)[np.array([0, -1])]
+    np.savez("data/chaos.npz", uu=uu, vv=vv)
 
 
 if __name__ == "__main__":
