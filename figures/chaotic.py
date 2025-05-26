@@ -8,6 +8,24 @@ from oda.models import Lorenz96
 jax.config.update("jax_enable_x64", True)
 jax.config.update("jax_platform_name", "cpu")
 
+# --- LaTeX Configuration for Matplotlib ---
+plt.rcParams.update({
+    "pgf.texsystem": "pdflatex",  # or "lualatex", "xelatex"
+    "font.family": "serif",
+    "font.size": 10,  # Adjust as needed
+    "text.usetex": True,
+    "pgf.rcfonts": False,  # Don't use pgf.rcfonts for custom fonts
+    "pgf.preamble": "\n".join([
+        r"\usepackage{amsmath}",
+        r"\usepackage{amsfonts}",
+        r"\usepackage{amssymb}",
+        r"\usepackage{newtxtext}",  # Example: Times New Roman clone for text
+        r"\usepackage{newtxmath}",  # Example: Times New Roman clone for math
+        # Add any other LaTeX packages you need for specific fonts or symbols
+    ])
+})
+# ------------------------------------------
+
 
 def solve(prob, y0, saveat):
     sol = dfx.diffeqsolve(
@@ -44,20 +62,9 @@ def main(Nx: int = 40, draw_plot: bool = False):
     prob = dfx.ODETerm(lambda t, u, args: lorenz96(u))
 
     # solve!
-    uu = solve(prob, u0, saveat)
-    vv = solve(prob, v0, saveat)
-
-    fig, (ax0, ax1) = plt.subplots(ncols=2, figsize=(8, 4))
-    ax0.plot(uu[0], label=r"$u_0$")
-    ax0.plot(vv[0], label=r"$v_0$", linestyle="--")
-    ax0.set_xlabel(r"$x$")
-    ax0.legend()
-    ax1.plot(uu[-1], label=r"$u_1$")
-    ax1.plot(vv[-1], label=r"$v_1$", linestyle="--")
-    ax1.set_xlabel(r"$x$")
-    ax1.legend()
-    plt.tight_layout()
-    plt.savefig("chaotic.pdf")
+    uu = solve(prob, u0, saveat)[[0, -1]]
+    vv = solve(prob, v0, saveat)[[0, -1]]
+    np.savez("chaotic.npz", uu=uu, vv=vv)
 
 
 if __name__ == "__main__":
