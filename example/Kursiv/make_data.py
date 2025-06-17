@@ -10,7 +10,7 @@ jax.config.update("jax_enable_x64", True)
 jax.config.update("jax_platform_name", "cpu")
 
 
-def kursiv(Nx: int = 128, draw_plot: bool = False):
+def kursiv(Nx: int = 128, tmax: float = 1e4, draw_plot: bool = False):
     if not os.path.isdir("data"):
         os.mkdir("data")
 
@@ -29,7 +29,6 @@ def kursiv(Nx: int = 128, draw_plot: bool = False):
 
     uu = [u]
     tt = [0.0]
-    tmax = 10000
     nmax = int(tmax // model.dt)
 
     for _ in trange(nmax):
@@ -40,8 +39,11 @@ def kursiv(Nx: int = 128, draw_plot: bool = False):
     tt = np.stack(tt)
     uu = np.stack(uu)
 
-    np.savez("data/train.npz", tt=tt[5000:-25000], sol=uu[5000:-25000])
-    np.savez("data/test.npz", tt=tt[15000:], sol=uu[15000:])
+    if tmax == 1e4:
+        np.savez("data/train.npz", tt=tt[5000:-25000], sol=uu[5000:-25000])
+        np.savez("data/test.npz", tt=tt[15000:], sol=uu[15000:])
+    else:
+        np.savez("data/kursiv.npz", tt=tt, sol=uu)
 
     if draw_plot:
         import matplotlib.pyplot as plt
