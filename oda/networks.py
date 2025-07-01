@@ -9,8 +9,28 @@ import jax.tree_util as jtu
 
 
 class BaseCorrector(eqx.Module):
-    def __call__(self, u_like, y_like):
+    def __call__(self):
         raise NotImplementedError
+
+
+class LinearCorrector(BaseCorrector):
+    linear: eqx.nn.Linear
+    d_in : int = eqx.field(static=True)
+
+    def __init__(self, d_in: int, Nx: int, sensor_every: int, key = jr.key(4321)):
+        self.d_in = d_in
+        No = Nx // sensor_every
+        if d_in == 1:
+            self.linear = eqx.nn.Linear(No, Nx, use_bias=False, key=key)
+        elif d_in == 2:
+            self.linear = eqx.nn.Linear(No**d_in, Nx**d_in, use_bias=False, key=key)
+
+    def __call__(self, u: Float[ArrayLike, "*Nx"], innovation: Float[ArrayLike, "*No"]) -> Float[ArrayLike, "*Nx"]:
+        if self.d_in == 1:
+            return self.linear(innovation)
+        elif self.d_in == 2:
+            out = self.linear((innovation).ravel())
+            return out.reshape(u.shape)
 
 
 class SimpleCorrector(BaseCorrector):
@@ -254,10 +274,10 @@ class DNO(eqx.Module):
         )
     
     @jaxtyped(typechecker=typechecker)
-    def __call__(self, u: Float[ArrayLike, "*Nx"], y: Float[ArrayLike, "*No"]) -> Float[ArrayLike, "*Nx"]:
+    def __call__(self, u: Float[ArrayLike, "*Nx"], innovation: Float[ArrayLike, "*No"]) -> Float[ArrayLike, "*Nx"]:
         branch = self.branch(u.ravel()) # (num_channels,)
-        trunk = self.trunk(y) # num_channels x (No * stride)
-        return jnp.einsum("i, i... -> ...", branch, trunk) # (num_channels,) x (num_channels x (No * stride)) -> (No * stride,)
+        trunk = self.trunk(innovation) # num_channels x (No * stride)
+        return jnp.einsum("i, i... -> ...", branch, trunk)
 
 
 if __name__ == "__main__":
