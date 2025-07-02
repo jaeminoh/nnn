@@ -19,9 +19,11 @@ def main(
         inner_steps: int = 50,
         method: str = "forward_euler",
 ):
-    fname = f"Kursiv_Noise{noise_level}Obs{sensor_every}Rank{rank}"
-    print(f"""============================
+    fname = f"Kursiv_{filter_type}_Noise{noise_level}Obs{sensor_every}Rank{rank}"
+    print(f"""
+          ============================
           Configurations:
+          filter_type: {filter_type}
           method: {method}
           inner_steps: {inner_steps}
           noise_level: {noise_level}
@@ -63,6 +65,7 @@ def main(
     uu = test_on("train", filter, net, data_loader=data_loader, unroll_length=1000)
     visualize(uu, loss_traj, fname=fname + "_train")
 
+    # Test on test sets with different unroll lengths
     uu = test_on("test", filter, net, data_loader=data_loader, unroll_length=1000)
     uu.save(fname + "_test1")
     visualize(uu, loss_traj, fname=fname + "_test1")

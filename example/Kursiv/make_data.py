@@ -15,7 +15,7 @@ def kursiv(Nx: int = 128, tmax: float = 1e4, draw_plot: bool = False):
         os.mkdir("data")
 
     
-    print(f"Precision check: {jax.numpy.ones(()).dtype}")
+    print(f"Data precision: {jax.numpy.ones(()).dtype}")
 
     """
     A numerical solver of Kuramoto-Sivashinsky equation by ETDRK4 scheme
