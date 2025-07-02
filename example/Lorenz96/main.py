@@ -18,14 +18,16 @@ def main(
         sensor_every: int = 1,
         rank: int = 20,
         lr0: float = 1e-3,
-        epoch: int = 200,
+        epoch: int = 300,
         include_training: bool = True,
-        test_unroll_length: int = 100,
-        unroll_length: int = 3,
+        test_unroll_length: int = 400,
+        unroll_length: int = 5,
 ):
-    fname = f"L96_Forcing{int(forcing)}Noise{noise_level}Obs{sensor_every}Rank{rank}Nx{Nx}"
-    print(f"""==============================
+    fname = f"L96_{filter_type}_Forcing{int(forcing)}Noise{noise_level}Obs{sensor_every}Nx{Nx}"
+    print(f"""
+          ==============================
           Configurations:
+          filter_type: {filter_type}
           forcing: {forcing}
           noise_level: {noise_level}
           sensor_every: {sensor_every}

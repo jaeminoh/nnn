@@ -7,23 +7,22 @@ with_theme(theme_latexfonts()) do
     f = Figure(size=(800, 400), fontsize=22)
 
     # solution profile
-    data = npzread("data/kursiv.npz")
+    data = npzread("data/L96.npz")
     us = data["sol"]
     ts = data["tt"]
     Nx = size(us, 2)
-    xs = LinRange(0, 32 * pi, Nx)
+    xs = 1:Nx
 
     ax1 = Axis(f[1:2, 1],
                 xlabel = L"$t$",
                 ylabel = L"$x$",
-                yticks = (0:16π:32π, ["0", L"16π", L"32π"]),
-               )
+                )
     heatmap!(ax1, ts, xs, us, colormap=:jet)
     Colorbar(f[0, 1], limits=(minimum(us), maximum(us)), colormap=:jet, vertical=false)
 
     # Comparision: linear vs. nonlinear
-    data_nonlinear = npzread("data/kursiv_nonlinear.npz")
-    data_linear = npzread("data/kursiv_linear.npz")
+    data_nonlinear = npzread("data/L96_nonlinear.npz")
+    data_linear = npzread("data/L96_linear.npz")
     ts = data_linear["tt"] # time points
 
     # snapshot at the last time point
@@ -33,7 +32,6 @@ with_theme(theme_latexfonts()) do
     
     ax2 = Axis(f[1, 2],
                 xlabel = L"x",
-                xticks = (0:16π:32π, ["0", L"16π", L"32π"]),
                )
     lines!(ax2, xs, us[end, :], linewidth=lw, color=:black, label="Reference")
     lines!(ax2, xs, us_nonlinear[end, :], linewidth=lw, linestyle=:dashdot, label="NNN")
@@ -52,6 +50,6 @@ with_theme(theme_latexfonts()) do
 
     resize_to_layout!(f)
 
-    save("data/kursiv.pdf", f)
-    println("Done! See data/kursiv.pdf")
+    save("data/L96.pdf", f)
+    println("Done! See data/L96.pdf")
 end

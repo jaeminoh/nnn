@@ -24,3 +24,5 @@ do
     cp data/Kursiv_${filter_type}_Noise${noise}Obs${sensor_every}Rank20_test2.npz ../../figures/data/kursiv_${filter_type}.npz
 done
 
+cd ../../figures
+julia kursiv.jl
