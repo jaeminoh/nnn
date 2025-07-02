@@ -1,30 +1,13 @@
 import diffrax as dfx
+import jax.numpy as jnp
 import jax
 import numpy as np
-import matplotlib.pyplot as plt
 
 from oda.models import Lorenz96
 
 jax.config.update("jax_enable_x64", True)
 jax.config.update("jax_platform_name", "cpu")
 
-# --- LaTeX Configuration for Matplotlib ---
-plt.rcParams.update({
-    "pgf.texsystem": "pdflatex",  # or "lualatex", "xelatex"
-    "font.family": "serif",
-    "font.size": 10,  # Adjust as needed
-    "text.usetex": True,
-    "pgf.rcfonts": False,  # Don't use pgf.rcfonts for custom fonts
-    "pgf.preamble": "\n".join([
-        r"\usepackage{amsmath}",
-        r"\usepackage{amsfonts}",
-        r"\usepackage{amssymb}",
-        r"\usepackage{newtxtext}",  # Example: Times New Roman clone for text
-        r"\usepackage{newtxmath}",  # Example: Times New Roman clone for math
-        # Add any other LaTeX packages you need for specific fonts or symbols
-    ])
-})
-# ------------------------------------------
 
 
 def solve(prob, y0, saveat):
@@ -54,17 +37,23 @@ def main(Nx: int = 40, draw_plot: bool = False):
     v0[0] += 0.001
 
     # time steps
-    tt = np.arange(0, 1.0, 0.01)
-    saveat = dfx.SaveAt(ts=tt)
+    ts = np.arange(0, 1.0, 0.01)
+    saveat = dfx.SaveAt(ts=ts)
 
     # ode problem
     lorenz96 = Lorenz96(Nx=Nx)
     prob = dfx.ODETerm(lambda t, u, args: lorenz96(u))
 
     # solve!
-    uu = solve(prob, u0, saveat)[np.array([0, -1])]
-    vv = solve(prob, v0, saveat)[np.array([0, -1])]
-    np.savez("data/chaos.npz", uu=uu, vv=vv)
+    us = solve(prob, u0, saveat)
+    vs = solve(prob, v0, saveat)
+    
+    # error
+    es = np.linalg.norm(us - vs, axis=-1)
+
+
+    # save
+    np.savez("data/chaos.npz", us=us[np.array([0, -1])], vs=vs[np.array([0, -1])], error=es)
 
 
 if __name__ == "__main__":
