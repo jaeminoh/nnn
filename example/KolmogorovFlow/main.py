@@ -8,11 +8,12 @@ import xarray as xr
 from make_data import KolmogorovFlow
 
 from oda.filters import ClassicFilter as Filter
-from oda.networks import DNO as Net
+from oda.networks import DNO, LinearCorrector
 from oda.utils import DataLoader, Optimization, test_on,  rmse
 
 
 def main(
+        filter_type: str = "nonlinear",
         noise_level: float = 0.75,
         sensor_every: int = 1,
         rank: int = 20,
@@ -23,7 +24,8 @@ def main(
         inner_steps: int = 10,
 ):
     fname = f"KF_Noise{noise_level}Obs{sensor_every}Rank{rank}"
-    print(f"""Configurations:
+    print(f"""=============================
+          Configurations:
           inner_steps: {inner_steps}
           noise_level: {noise_level}
           sensor_every: {sensor_every}
@@ -37,16 +39,23 @@ def main(
     model = KolmogorovFlow(
         inner_steps=inner_steps, sensor_every=sensor_every, d_in=2
     )
+
+    if filter_type == "nonlinear":
+        net = DNO(
+            num_spatial_dims=2,
+            Nx=64,
+            stride=sensor_every,
+            num_channels=rank,
+        )
+
+    elif filter_type == "linear":
+        net = LinearCorrector(
+            d_in=2,
+            Nx=64,
+            sensor_every=sensor_every,
+        )
+
     filter = Filter(model=model, observe=model.observe)
-    net = Net(
-        num_spatial_dims=2,
-        Nx=64,
-        stride=sensor_every,
-        num_channels=rank,
-    )
-    #net = Net(
-    #    num_spatial_dim=2, hidden_channels=rank, kernel_size=10, stride=sensor_every
-    #)
     data_loader = DataLoader(model.observe, noise_level=noise_level)
 
     if include_training:
@@ -61,8 +70,9 @@ def main(
     # uu.save(fname + "_test")
 
     print(f"""
-          (RMSE, nRMSE)
-          {rmse(uu.forecast, uu.reference)}, {rmse(uu.forecast, uu.reference, normalize=True)}""")
+          RMSE:  {rmse(uu.forecast, uu.reference)}
+          nRMSE: {rmse(uu.forecast, uu.reference, normalize=True)}
+          =============================""")
 
     # transform the trajectory into real-space and wrap in xarray for plotting
     tt = uu.tt[1:]

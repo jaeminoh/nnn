@@ -4,22 +4,24 @@ import optax
 
 from oda.filters import ClassicFilter as Filter
 from oda.models import Kursiv
-from oda.networks import DNO as Net
+from oda.networks import DNO, LinearCorrector
 from oda.utils import DataLoader, Optimization, rmse, test_on, visualize
 
 def main(
+        filter_type: str = "nonlinear",
         noise_level: float = 0.5,
         sensor_every: int = 1,
         rank: int = 20,
         lr0: float = 1e-3,
         epoch: int = 300,
         include_training: bool = True,
-        unroll_length: int = 3,
+        unroll_length: int = 10,
         inner_steps: int = 50,
         method: str = "forward_euler",
 ):
     fname = f"Kursiv_Noise{noise_level}Obs{sensor_every}Rank{rank}"
-    print(f"""Configurations:
+    print(f"""============================
+          Configurations:
           method: {method}
           inner_steps: {inner_steps}
           noise_level: {noise_level}
@@ -32,11 +34,22 @@ def main(
           """)
     model = Kursiv(sensor_every=sensor_every, d_in=1, method=method, inner_steps=inner_steps)
     filter = Filter(model=model, observe=model.observe)
-    net = Net(
-        Nx=128,
-        stride=sensor_every,
-        num_channels=rank,
-    )
+    if filter_type == "nonlinear":
+        net = DNO(
+            stride=sensor_every,
+            Nx=128,
+            num_channels=rank,
+            num_spatial_dims=1,
+        )
+    elif filter_type == "linear":
+        net = LinearCorrector(
+            d_in=1,
+            Nx=128,
+            sensor_every=sensor_every,
+        )
+    else:
+        raise ValueError(f"Unknown filter type! It should be 'nonlinear' or 'linear', but got {filter_type}.")
+    
     data_loader = DataLoader(model.observe, noise_level=noise_level)
 
     if include_training:
@@ -59,8 +72,9 @@ def main(
     visualize(uu, loss_traj, fname=fname + "_test2")
 
     print(f"""
-          (RMSE, nRMSE)
-          {rmse(uu.forecast, uu.reference)}, {rmse(uu.forecast, uu.reference, normalize=True)}""")
+          RMSE:  {rmse(uu.forecast, uu.reference)}
+          nRMSE: {rmse(uu.forecast, uu.reference, normalize=True)}
+          =============================""")
 
 
 if __name__ == "__main__":
