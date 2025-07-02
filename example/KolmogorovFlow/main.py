@@ -20,12 +20,14 @@ def main(
         lr0: float = 1e-3,
         epoch: int = 300,
         include_training: bool = True,
-        unroll_length: int = 3,
+        unroll_length: int = 10,
         inner_steps: int = 10,
 ):
-    fname = f"KF_Noise{noise_level}Obs{sensor_every}Rank{rank}"
-    print(f"""=============================
+    fname = f"KF_{filter_type}_Noise{noise_level}Obs{sensor_every}Rank{rank}"
+    print(f"""
+          =============================
           Configurations:
+          filter_type: {filter_type}
           inner_steps: {inner_steps}
           noise_level: {noise_level}
           sensor_every: {sensor_every}
@@ -67,7 +69,7 @@ def main(
         # loss_traj = np.ones((epoch // 100,))
 
     uu = test_on("test", filter, net, data_loader=data_loader, unroll_length=5000)
-    # uu.save(fname + "_test")
+    uu.save(fname + "_test")
 
     print(f"""
           RMSE:  {rmse(uu.forecast, uu.reference)}
