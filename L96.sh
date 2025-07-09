@@ -14,7 +14,7 @@ forcings=(4 8 16)
 noise_levels=(0.1854 0.364 0.6298)
 
 cd example/Lorenz96
-for Nx in "${Nxs[@]}"
+for Nx in 40 128
 do
     for i in {0..2}
     do

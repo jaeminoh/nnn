@@ -37,12 +37,12 @@ with_theme(theme_latexfonts()) do
 
 
     # Error plot
-    ax = Axis(g2[1, 1], xlabel=L"t", ylabel=L"$\Vert u - \hat{u} \Vert$")
+    ax = Axis(g2[1, 1], xlabel=L"t", ylabel="RMSE")
     es_nonlinear = dropdims(sum((us_nonlinear .- us).^ 2, dims=(2, 3)), dims=(2,3)) / size(us, 2)^2 .|> sqrt
     es_linear = dropdims(sum((us_linear .- us).^ 2, dims=(2, 3)), dims=(2,3)) / size(us, 2)^2 .|> sqrt
 
     lines!(ax, ts[2:end], es_nonlinear, linewidth=lw, label="NNN", linestyle=:dash)
-    lines!(ax, ts[2:end], es_linear, linewidth=lw, color=:red, linestyle=:dashdot, label="Linear")
+    lines!(ax, ts[2:end], es_linear, linewidth=lw, color=:red, linestyle=:dot, label="Linear")
     axislegend(ax, position=:rt)
 
     Label(g1[1, 1, TopLeft()], "(A)", font = :bold, padding = (0, 5, 5, 0), halign=:right)

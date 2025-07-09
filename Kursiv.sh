@@ -2,31 +2,23 @@
 
 export XLA_PYTHON_CLIENT_MEM_FRACTION=.20
 export CUDA_VISIBLE_DEVICES=5
-#export JAX_ENABLE_X64=True
 
-rank=20
-epoch=300
-unroll_length=10
+
 filter_type="linear"
+epoch=300
 
 cd example/Kursiv
 noises=(0.25 0.375 0.5)
-methods=("etdrk4" "forward_euler")
-inner_steps=(10 50)
+method="forward_euler" #"etdrk4"
+inner_step=25 #10
+
 
 python make_data.py
-for i in {0..1}
+for noise in "${noises[@]}"
 do
-    method=${methods[$i]}
-    inner_step=${inner_steps[$i]}
-    for noise in "${noises[@]}"
+    for sensor_every in 1 2 4
     do
-        for sensor_every in 1 2 4
-        do
-        python main.py --filter_type=$filter_type \
-        --method=$method --inner_steps=$inner_step \
-        --sensor_every=$sensor_every --rank=$rank --noise_level=$noise \
-        --include_training=True --epoch=$epoch --unroll_length=$unroll_length
-        done
+    python main.py --filter_type=$filter_type --method=$method --inner_steps=$inner_step \
+    --sensor_every=$sensor_every  --noise_level=$noise --include_training=True --epoch=$epoch
     done
 done

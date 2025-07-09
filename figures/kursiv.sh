@@ -10,7 +10,7 @@ filter_types=("linear" "nonlinear")
 
 cd ../example/Kursiv
 noise=0.5
-sensor_every=1
+sensor_every=4
 method="etdrk4"
 inner_step=10
 
@@ -18,6 +18,8 @@ python make_data.py
 for i in {0..1}
 do
     filter_type=${filter_types[$i]}
+    #method=${methods[$i]}
+    #inner_step=${inner_steps[$i]}
     python main.py --filter_type=$filter_type --method=$method --sensor_every=$sensor_every \
     --inner_steps=$inner_step --noise_level=$noise --include_training=True
 

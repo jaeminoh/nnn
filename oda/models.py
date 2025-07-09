@@ -90,11 +90,11 @@ class Kursiv(DynamicalCore):
         Nx: int = 128,
         xl: float = 0.0,
         xr: float = 32 * np.pi,
-        dt: float = 5e-3,
-        inner_steps: int = 50,
+        inner_steps: int = 1,
         method: str = "etdrk4",
         **kwargs,
     ):
+        dt = 1 / 4 / inner_steps
         super().__init__(Nx=Nx, dt=dt, inner_steps=inner_steps, **kwargs)
         self.k = 2j * np.pi * jnp.fft.rfftfreq(self.Nx, (xr - xl) / self.Nx)
         self.method = method

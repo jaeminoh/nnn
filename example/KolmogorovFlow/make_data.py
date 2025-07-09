@@ -21,7 +21,7 @@ from oda.models import DynamicalCore
 print(f"Precision check: {jnp.ones(()).dtype}")
 config = Configuration()
 print(
-    f"Nx: {config.num_grids}, viscosity: {config.viscosity}, noise_level: {config.noise_level}%"
+    f"Nx: {config.num_grids}, viscosity: {config.viscosity}"
 )
 
 # physical parameters
@@ -42,7 +42,7 @@ step_fn = spectral.time_stepping.crank_nicolson_rk4(
 
 
 class KolmogorovFlow(DynamicalCore):
-    def __init__(self, dt: float = dt, inner_steps: int = 1, **kwargs):
+    def __init__(self, dt: float = dt, inner_steps: int = 10, **kwargs):
         super().__init__(
             Nx=config.num_grids, dt=dt, inner_steps=inner_steps, **kwargs
         )  # dt, num_steps
@@ -74,8 +74,10 @@ def main(
     **return**:
     - `train.npz` and `test.npz` will be saved in the disk.
     """
-    print(
-        f"observe every {observe_every}-th step, total {burn_steps + train_steps + test_steps} observations"
+    print(f"""
+          noise_level: {config.noise_level}%,
+          observe every {observe_every}-th step,
+          total {burn_steps + train_steps + test_steps} observations"""
     )
     model = KolmogorovFlow(dt=dt, inner_steps=observe_every)
     total_steps = burn_steps + train_steps + test_steps

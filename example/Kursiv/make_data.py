@@ -23,7 +23,8 @@ def kursiv(Nx: int = 128, tmax: float = 1e4, draw_plot: bool = False):
     # spatial grid and initial condition
     xx = np.linspace(0, 32 * np.pi, Nx + 1)[:-1]
     u = np.cos(xx / 16) * (1 + np.sin(xx / 16))
-    model = Kursiv(Nx=Nx, dt=1 / 4, method="etdrk4")
+    model = Kursiv(Nx=Nx, method="etdrk4", inner_steps=1)
+    print(f"dt = {model.dt}")
 
     t = 0.0
 

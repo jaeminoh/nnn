@@ -18,14 +18,14 @@ def main(
         sensor_every: int = 1,
         rank: int = 20,
         lr0: float = 1e-3,
-        epoch: int = 300,
+        epoch: int = 100,
         include_training: bool = True,
         unroll_length: int = 10,
         inner_steps: int = 10,
 ):
     fname = f"KF_{filter_type}_Noise{noise_level}Obs{sensor_every}Rank{rank}"
     print(f"""
-          =============================
+=============================
           Configurations:
           filter_type: {filter_type}
           inner_steps: {inner_steps}
@@ -62,7 +62,7 @@ def main(
 
     if include_training:
         opt = Optimization(lr0=lr0, algorithm=optax.adam, epoch=epoch)
-        train_data = data_loader.load_train(unroll_length=10, max_ens_size=100)
+        train_data = data_loader.load_train(unroll_length=10, max_ens_size=200)
         net, _ = opt.solve(fname, filter, net, train_data)
     else:
         net = eqx.tree_deserialise_leaves(f"data/{fname}.eqx", net)
@@ -74,7 +74,7 @@ def main(
     print(f"""
           RMSE:  {rmse(uu.forecast, uu.reference)}
           nRMSE: {rmse(uu.forecast, uu.reference, normalize=True)}
-          =============================""")
+=============================""")
 
     # transform the trajectory into real-space and wrap in xarray for plotting
     tt = uu.tt[1:]
@@ -102,7 +102,8 @@ def main(
         data = xr.DataArray(d[999::1000], dims=["time", "x", "y"], coords=coords)
         data.plot.imshow(col="time", col_wrap=5, cmap=sns.cm.icefire, robust=True)
         plt.savefig(f"data/{fname}_{type}.pdf")
-
+    
+    """
     for t, c in zip(
         [
             "baseline",
@@ -116,7 +117,7 @@ def main(
         [coords, obs_coords, coords, coords, coords, obs_coords, coords],
     ):
         plotting(t, coords=c)
-
+    """
 
 if __name__ == "__main__":
     import fire
