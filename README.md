@@ -15,22 +15,7 @@ Or, install dependencies via `requirements.txt`.
 
 
 ## Examples
-```
-├── example
-│   ├── KolmogorovFlow
-│   │   └── data
-│   ├── Kursiv
-│   │   └── data
-│   └── Lorenz96
-│       └── data
-├── figures
-│   └── data
-└── oda
-```
-
-1. `cd Lorenz96`, `cd Kursiv`, or `cd KolmogorovFlow`.
-1. To generate training and test data, run `python make_data.py` in each directory.
-2. Run `bash main.sh`
+run `bash Lorenz96.sh`, `bash kursiv.sh`, or `bash KolmogorovFlow.sh`.
 
 
 ## Citation
