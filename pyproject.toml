@@ -1,13 +1,13 @@
 [project]
-name = "oda"
-version = "0.0.1"
-description = "offline data assimilation"
+name = "nnn"
+version = "0.1.0"
+description = "Neural network nudging"
 readme = "README.md"
 requires-python ="~=3.11"
 authors = [
   {name = "Jaemin Oh", email = "jaeminoh.math@gmail.com"},
 ]
-urls = {repository = "https://github.com/jaeminoh/ODA" }
+urls = {repository = "https://github.com/jaeminoh/nnn" }
 dependencies = [
     "beartype>=0.20.2",
     "diffrax>=0.7.0",
@@ -26,8 +26,12 @@ dependencies = [
     "xarray>=2025.4.0",
 ]
 
-[tool.setuptools]
-packages = ["oda"]
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build]
+include = ["nnn/*"]
 
 [tool.ruff.lint]
 ignore = ["F722"]

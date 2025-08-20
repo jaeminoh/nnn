@@ -16,7 +16,7 @@ import jax_cfd.spectral as spectral
 import numpy as np
 from utils import Configuration, add_noise, initialize_vorticity
 
-from oda.models import DynamicalCore
+from nnn.models import DynamicalCore
 
 print(f"Precision check: {jnp.ones(()).dtype}")
 config = Configuration()

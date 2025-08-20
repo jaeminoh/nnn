@@ -4,10 +4,10 @@ import optax
 import jax
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
-from oda.filters import ClassicFilter as Filter
-from oda.models import Lorenz96
-from oda.networks import DNO, LinearCorrector
-from oda.utils import DataLoader, Optimization, test_on, visualize, rmse
+from nnn.filters import ClassicFilter as Filter
+from nnn.models import Lorenz96
+from nnn.networks import DNO, LinearCorrector
+from nnn.utils import DataLoader, Optimization, test_on, visualize, rmse
 
 
 def main(

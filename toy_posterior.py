@@ -1,6 +1,6 @@
 import jax
 import numpy as np
-from oda.flow import Flow, train
+from nnn.flow import Flow, train
 import optax
 import equinox as eqx
 import matplotlib.pyplot as plt

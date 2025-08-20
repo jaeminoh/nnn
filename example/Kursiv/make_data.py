@@ -4,7 +4,7 @@ import jax
 import numpy as np
 from tqdm import trange
 
-from oda.models import Kursiv
+from nnn.models import Kursiv
 
 jax.config.update("jax_enable_x64", True)
 jax.config.update("jax_platform_name", "cpu")

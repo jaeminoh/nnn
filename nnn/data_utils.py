@@ -5,7 +5,7 @@ import numpy as np
 from beartype import beartype as typechecker
 from jaxtyping import ArrayLike, Float, jaxtyped
 
-from oda.observation import ObservationOperator
+from nnn.observation import ObservationOperator
 
 
 @dataclass

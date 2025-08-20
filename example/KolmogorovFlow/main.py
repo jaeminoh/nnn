@@ -7,9 +7,9 @@ import seaborn as sns
 import xarray as xr
 from make_data import KolmogorovFlow
 
-from oda.filters import ClassicFilter as Filter
-from oda.networks import DNO, LinearCorrector
-from oda.utils import DataLoader, Optimization, test_on,  rmse
+from nnn.filters import ClassicFilter as Filter
+from nnn.networks import DNO, LinearCorrector
+from nnn.utils import DataLoader, Optimization, test_on,  rmse
 
 
 def main(

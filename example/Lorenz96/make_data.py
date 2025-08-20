@@ -4,7 +4,7 @@ import diffrax as dfx
 import jax
 import numpy as np
 
-from oda.models import Lorenz96
+from nnn.models import Lorenz96
 
 jax.config.update("jax_enable_x64", True)
 jax.config.update("jax_platform_name", "cpu")

@@ -1,58 +1,46 @@
-# ODA: learning solution operator for the variational data assimilation problem
+<h1 align='center'> NNN: Machine Learning-Based Nonlinear Nudging for Chaotic Dynamical Systems </h1>
 
-[view overleaf](https://www.overleaf.com/read/ktxhjhxfhkcf#c15a2d)
+
+## Abstract 
+Nudging is an empirical data assimilation technique that incorporates an observation-driven control term into the model dynamics. The trajectory of the nudged system approaches the true system trajectory over time, even when the initial conditions differ. For linear state space models, such control terms can be derived under mild assumptions. However, designing effective nudging terms becomes significantly more challenging in the nonlinear setting. In this work, we propose neural network nudging, a data-driven method for learning nudging terms in nonlinear state space models. We establish a theoretical existence result based on the Kazantzis--Kravaris--Luenberger observer theory. The proposed approach is evaluated on three benchmark problems that exhibit chaotic behavior: the Lorenz 96 model, the Kuramoto--Sivashinsky equation, and the Kolmogorov flow.
 
 
 ## Setup
-1. clone this repository.
+1. clone this repository: `git clone https://github.com/jaeminoh/nnn.git`
 2. enter to the directory: `cd oda`
-3. install uv.
-4. setup via `. setup.sh` or `source setup.sh` (aliases)
+3. install [uv](https://docs.astral.sh/uv/getting-started/installation/).
+4. setup via `bash setup.sh` and then activate the environment `source .venv/bin/activate`.
+
+Or, install dependencies via `requirements.txt`.
+
 
 ## Examples
-1. `cd Lorenz96` or `cd Kursiv`
+```
+├── example
+│   ├── KolmogorovFlow
+│   │   └── data
+│   ├── Kursiv
+│   │   └── data
+│   └── Lorenz96
+│       └── data
+├── figures
+│   └── data
+└── oda
+```
+
+1. `cd Lorenz96`, `cd Kursiv`, or `cd KolmogorovFlow`.
 1. To generate training and test data, run `python make_data.py` in each directory.
-2. Run `sh main.sh`
-
-### Lorenz 96 (Lorenz96)
-
-Forward Euler:
+2. Run `bash main.sh`
 
 
-https://github.com/user-attachments/assets/185b85fc-f90a-4674-8a12-97b1e0d83dab
+## Citation
+If you find this repository useful in your research, please consider citing us!
 
-
-Noisy Observation:
-
-
-https://github.com/user-attachments/assets/15147f46-a995-46ec-af6b-b12b125c6eec
-
-
-Combination (Assimilation):
-
-
-https://github.com/user-attachments/assets/c94dee6f-509d-48c4-90a8-0b5eb80d7afd
-
-
-
-### Kuramoto-Sivashinsky (Kursiv)
-
-<iframe width="560" height="315" src="https://www.youtube.com/embed/_IA0w4a4a84?si=flF_foGHj1IO7_5z" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-
-Forward Euler:
-
-
-https://github.com/user-attachments/assets/4085b54c-39aa-479f-8083-8cdac189afca
-
-
-Noisy Observation:
-
-
-https://github.com/user-attachments/assets/f2948dc0-7fbb-434d-bb4a-e188f6dba823
-
-
-Combination (Assimilation):
-
-
-https://github.com/user-attachments/assets/b9ff6202-f799-47de-b40c-89899b23bb08
-
+```bibtex
+@article{oh2025nnn,
+  title={Machine Learning-Based Nonlinear Nudging for Chaotic Dynamical Systems},
+  author={Oh, Jaemin and Lee, Jinsil and Hong, Youngjoon},
+  journal={arXiv preprint arXiv:2508.05778},
+  year={2025}
+}
+```

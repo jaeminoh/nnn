@@ -7,7 +7,7 @@ import numpy as np
 import optax
 from tqdm import trange
 
-from oda.models import lorenz96
+from nnn.models import lorenz96
 
 
 class Func(eqx.Module):

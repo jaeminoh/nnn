@@ -5,7 +5,7 @@ import jax.numpy as jnp
 import numpy as np
 from jax.numpy.fft import rfftfreq, rfft, irfft
 
-from oda.observation import UniformSubsample
+from nnn.observation import UniformSubsample
 
 
 class DynamicalCore:

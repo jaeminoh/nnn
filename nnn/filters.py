@@ -3,8 +3,8 @@ import jax.numpy as jnp
 from beartype import beartype as typechecker
 from jaxtyping import ArrayLike, Float, jaxtyped
 
-from oda.models import DynamicalCore
-from oda.observation import ObservationOperator
+from nnn.models import DynamicalCore
+from nnn.observation import ObservationOperator
 
 
 class BaseFilter:

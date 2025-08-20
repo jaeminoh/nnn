@@ -1,9 +1,9 @@
 import matplotlib.pyplot as plt
-from oda.filters import ClassicFilter as Filter
-from oda.models import Kursiv
-from oda.data_utils import DataLoader
+from nnn.filters import ClassicFilter as Filter
+from nnn.models import Kursiv
+from nnn.data_utils import DataLoader
 import equinox as eqx
-from oda.networks import SimpleCorrector as Net
+from nnn.networks import SimpleCorrector as Net
 import numpy as np
 import jax
 import jax.numpy as jnp

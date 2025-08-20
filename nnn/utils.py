@@ -9,8 +9,8 @@ from tqdm import trange
 from jaxtyping import Float, ArrayLike, jaxtyped, Scalar
 from beartype import beartype as typechecker
 
-from oda.data_utils import DataLoader, Solution
-from oda.filters import BaseFilter
+from nnn.data_utils import DataLoader, Solution
+from nnn.filters import BaseFilter
 
 
 @jaxtyped(typechecker=typechecker)

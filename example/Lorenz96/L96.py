@@ -9,9 +9,9 @@ import optax
 import jaxopt
 import matplotlib.pyplot as plt
 
-from oda.models import Lorenz96, _rk4
-from oda.networks import DNO as Net
-from oda.utils import DataLoader, _solve, rmse
+from nnn.models import Lorenz96, _rk4
+from nnn.networks import DNO as Net
+from nnn.utils import DataLoader, _solve, rmse
 
 
 def main(

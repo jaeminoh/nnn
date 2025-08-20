@@ -2,10 +2,10 @@ import equinox as eqx
 import numpy as np
 import optax
 
-from oda.filters import ClassicFilter as Filter
-from oda.models import Kursiv
-from oda.networks import DNO, LinearCorrector
-from oda.utils import DataLoader, Optimization, rmse, test_on, visualize
+from nnn.filters import ClassicFilter as Filter
+from nnn.models import Kursiv
+from nnn.networks import DNO, LinearCorrector
+from nnn.utils import DataLoader, Optimization, rmse, test_on, visualize
 
 def main(
         filter_type: str = "nonlinear",
