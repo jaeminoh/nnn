@@ -10,11 +10,15 @@ from jaxtyping import Float, ArrayLike, jaxtyped, Scalar
 from beartype import beartype as typechecker
 
 from nnn.data_utils import DataLoader, Solution
-from nnn.filters import BaseFilter
+from nnn import Filter
 
 
 @jaxtyped(typechecker=typechecker)
-def rmse(uu_pred: Float[ArrayLike, "Nt *Nx"], uu: Float[ArrayLike, "Nt *Nx"], normalize: bool = False) -> Scalar:
+def rmse(
+    uu_pred: Float[ArrayLike, " Nt *Nx"],
+    uu: Float[ArrayLike, " Nt *Nx"],
+    normalize: bool = False,
+) -> Scalar:
     ee = jax.vmap(jnp.linalg.norm)(uu_pred - uu)
     if normalize:
         ee = ee / jax.vmap(jnp.linalg.norm)(uu)
@@ -25,15 +29,13 @@ def rmse(uu_pred: Float[ArrayLike, "Nt *Nx"], uu: Float[ArrayLike, "Nt *Nx"], no
 
 def test_on(
     train_or_test: str,
-    filter: BaseFilter,
+    filter: Filter,
     net,
     data_loader: DataLoader,
     unroll_length: int = 60,
 ) -> Solution:
     "Test for obtained solution."
-    tt, u0, uu_ref, yy = data_loader.load_test(
-        f"data/{train_or_test}.npz", unroll_length
-    )
+    tt, u0, uu_ref, yy = data_loader.load_test(f"{train_or_test}", unroll_length)
     uu_base = filter.model.solve(u0, tt)
     uu_f, uu_a = filter.unroll(net, u0, yy)
     uu = Solution(tt, uu_ref, uu_base, uu_f, uu_a, yy)
@@ -72,7 +74,7 @@ def visualize(
     for i, ax in zip(indices, axs1[:-1]):
         ax.plot(uu.tt[1:], uu.reference[:, i], label="Reference", linewidth=3)
         ax.plot(uu.tt[1:], uu.forecast[:, i], ":", label="Forecast", linewidth=2)
-        #ax.plot(uu.tt[1:], uu.observation[:, i], "--", label="Observation", linewidth=1)
+        # ax.plot(uu.tt[1:], uu.observation[:, i], "--", label="Observation", linewidth=1)
         ax.set_xlabel(r"$t$")
         ax.set_ylabel(r"$u(x_i)$")
         ax.set_title(f"{i}th position")
@@ -87,7 +89,7 @@ def visualize(
     ax.set_title(f"{0}th position")
 
     plt.tight_layout()
-    plt.savefig(f"data/{fname}.pdf", format="pdf")
+    plt.savefig(f"{fname}.pdf", format="pdf")
 
 
 class Optimization:
@@ -96,7 +98,7 @@ class Optimization:
         self.epoch = epoch
         self.algorithm = algorithm(lr)
 
-    def solve(self, fname: str, filter: BaseFilter, net, data):
+    def solve(self, fname: str, filter: Filter, net, data):
         """
         Loops for iterative optimization.
 
@@ -117,7 +119,7 @@ class Optimization:
             solver.update, net, state, *data, maxiter=self.epoch
         )
 
-        eqx.tree_serialise_leaves(f"data/{fname}.eqx", net)  # save checkpoint
+        eqx.tree_serialise_leaves(f"{fname}.eqx", net)  # save checkpoint
         return net, loss_traj
 
 

@@ -4,17 +4,16 @@ import jax
 import numpy as np
 from tqdm import trange
 
-from nnn.models import Kursiv
-
-jax.config.update("jax_enable_x64", True)
-jax.config.update("jax_platform_name", "cpu")
+from nnn.equations import Kursiv
 
 
-def kursiv(Nx: int = 128, tmax: float = 1e4, draw_plot: bool = False):
-    if not os.path.isdir("data"):
-        os.mkdir("data")
+def main(Nx: int = 128, tmax: float = 1e4, draw_plot: bool = False):
+    path = "data/kursiv"
+    if not os.path.isdir(path):
+        os.makedirs(path)
 
-    
+    jax.config.update("jax_enable_x64", True)
+    jax.config.update("jax_platform_name", "cpu")
     print(f"Data precision: {jax.numpy.ones(()).dtype}")
 
     """
@@ -41,10 +40,10 @@ def kursiv(Nx: int = 128, tmax: float = 1e4, draw_plot: bool = False):
     uu = np.stack(uu)
 
     if tmax == 1e4:
-        np.savez("data/train.npz", tt=tt[5000:-25000], sol=uu[5000:-25000])
-        np.savez("data/test.npz", tt=tt[15000:], sol=uu[15000:])
+        np.savez(f"{path}/train.npz", tt=tt[5000:-25000], sol=uu[5000:-25000])
+        np.savez(f"{path}/test.npz", tt=tt[15000:], sol=uu[15000:])
     else:
-        np.savez("data/kursiv.npz", tt=tt, sol=uu)
+        np.savez(f"{path}/kursiv.npz", tt=tt, sol=uu)
 
     if draw_plot:
         import matplotlib.pyplot as plt
@@ -60,10 +59,10 @@ def kursiv(Nx: int = 128, tmax: float = 1e4, draw_plot: bool = False):
         plt.ylabel(r"$t$")
         plt.colorbar()
         plt.tight_layout()
-        plt.savefig("data/kursiv.pdf", format="pdf")
+        plt.savefig(f"{path}/kursiv.pdf", format="pdf")
 
 
 if __name__ == "__main__":
     import fire
 
-    fire.Fire(kursiv)
+    fire.Fire(main)

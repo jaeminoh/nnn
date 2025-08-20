@@ -1,13 +1,8 @@
-import diffrax as dfx
-import jax.numpy as jnp
 import jax
 import numpy as np
+import diffrax as dfx
 
-from nnn.models import Lorenz96
-
-jax.config.update("jax_enable_x64", True)
-jax.config.update("jax_platform_name", "cpu")
-
+from nnn.equations import Lorenz96
 
 
 def solve(prob, y0, saveat):
@@ -26,7 +21,9 @@ def solve(prob, y0, saveat):
 
 
 def main(Nx: int = 40, draw_plot: bool = False):
-    print(f"check precision: {jax.numpy.ones(()).dtype}")
+    jax.config.update("jax_enable_x64", True)
+    jax.config.update("jax_platform_name", "cpu")
+    print(f"Precision: {jax.numpy.ones(()).dtype}")
     print(f"Nx: {Nx}, draw plot: {draw_plot}")
     """
     A numerical solver of Lorenz 96 model
@@ -47,13 +44,12 @@ def main(Nx: int = 40, draw_plot: bool = False):
     # solve!
     us = solve(prob, u0, saveat)
     vs = solve(prob, v0, saveat)
-    
+
     # error
     es = np.linalg.norm(us - vs, axis=-1)
 
-
     # save
-    np.savez("data/chaos.npz", us=us[np.array([0, -1])], vs=vs[np.array([0, -1])], error=es)
+    np.savez("chaos.npz", us=us[np.array([0, -1])], vs=vs[np.array([0, -1])], error=es)
 
 
 if __name__ == "__main__":

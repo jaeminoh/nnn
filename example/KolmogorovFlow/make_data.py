@@ -2,11 +2,10 @@
 (GPU accelerated) Kolmogorov flow solver.
 
 Modified the original code from https://github.com/google/jax-cfd/blob/main/notebooks/spectral_forced_turbulence.ipynb
-
-Uncommentate `jax.config.update` line if you want to enable double precision.
 """
 
 import time
+import os
 
 import jax
 import jax.numpy as jnp
@@ -16,13 +15,12 @@ import jax_cfd.spectral as spectral
 import numpy as np
 from utils import Configuration, add_noise, initialize_vorticity
 
-from nnn.models import DynamicalCore
+from nnn._cores import DynamicalCore
+
 
 print(f"Precision check: {jnp.ones(()).dtype}")
 config = Configuration()
-print(
-    f"Nx: {config.num_grids}, viscosity: {config.viscosity}"
-)
+print(f"Nx: {config.num_grids}, viscosity: {config.viscosity}")
 
 # physical parameters
 grid = grids.Grid(
@@ -74,17 +72,19 @@ def main(
     **return**:
     - `train.npz` and `test.npz` will be saved in the disk.
     """
+    path = "data/KolmogorovFlow"
+    if not os.path.isdir(path):
+        os.makedirs(path)
     print(f"""
           noise_level: {config.noise_level}%,
           observe every {observe_every}-th step,
-          total {burn_steps + train_steps + test_steps} observations"""
-    )
+          total {burn_steps + train_steps + test_steps} observations""")
     model = KolmogorovFlow(dt=dt, inner_steps=observe_every)
     total_steps = burn_steps + train_steps + test_steps
     tt = np.linspace(0, dt * total_steps * observe_every, total_steps + 1)
-    assert np.allclose(
-        tt[1] - tt[0], dt * observe_every
-    ), "Incorrect number of time steps!"
+    assert np.allclose(tt[1] - tt[0], dt * observe_every), (
+        "Incorrect number of time steps!"
+    )
 
     vorticity0 = initialize_vorticity(grid, config.max_velocity, seed=seed)
     vorticity0 = add_noise(vorticity0, config.noise_level * 1e-2, seed=0)
@@ -99,12 +99,12 @@ def main(
 
     tt = tt[burn_steps:]
     uu = uu[burn_steps:]
-    np.savez("data/train.npz", tt=tt[:-test_steps], sol=uu[:-test_steps])
+    np.savez(f"{path}/train.npz", tt=tt[:-test_steps], sol=uu[:-test_steps])
     assert tt[:-test_steps][-1] == tt[-(test_steps + 1) :][0], "Index Error!"
 
     tt = tt[-(test_steps + 1) :]
     uu = uu[-(test_steps + 1) :]
-    np.savez("data/test.npz", tt=tt, sol=uu)
+    np.savez(f"{path}/test.npz", tt=tt, sol=uu)
 
 
 if __name__ == "__main__":

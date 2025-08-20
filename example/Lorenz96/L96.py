@@ -9,8 +9,8 @@ import optax
 import jaxopt
 import matplotlib.pyplot as plt
 
-from nnn.models import Lorenz96, _rk4
-from nnn.networks import DNO as Net
+from nnn.equations import Lorenz96, _rk4
+from nnn.nudgings import DNO as Net
 from nnn.utils import DataLoader, _solve, rmse
 
 
@@ -36,8 +36,6 @@ def main(
         os.system("python make_data.py")
         data_loader = DataLoader(model.observe, noise_level=noise_level)
 
-
-
     @jaxtyped(typechecker=typechecker)
     def _step(
         net: eqx.Module,
@@ -45,7 +43,7 @@ def main(
         y: Float[ArrayLike, " No"],
         dt: float = model.dt,
     ) -> Float[ArrayLike, " Nx"]:
-        #Hu = model.observe(u0)
+        # Hu = model.observe(u0)
         return _rk4(lambda u: model(u) + net(u, y - model.observe(u)), u0, dt)  # uhat
 
     def _forecast(net, u0, y, dt):

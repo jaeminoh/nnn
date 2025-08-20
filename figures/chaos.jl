@@ -1,6 +1,6 @@
 using CairoMakie, LaTeXStrings, NPZ
 
-filename::String="data/chaos.npz"
+filename::String="chaos.npz"
 lw::Int=3
 
 with_theme(theme_latexfonts()) do

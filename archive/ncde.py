@@ -7,7 +7,7 @@ import numpy as np
 import optax
 from tqdm import trange
 
-from nnn.models import lorenz96
+from nnn._cores import lorenz96
 
 
 class Func(eqx.Module):
@@ -88,9 +88,9 @@ def main(length: int = 100, noise_level: int = 5):
         net = eqx.apply_updates(net, updates)
         return loss, net, opt_state
 
-    for it in (pbar:=trange(500)):
+    for it in (pbar := trange(500)):
         loss, cde, opt_state = make_step(cde, opt_state)
-        pbar.set_postfix({"Loss":f"{loss:.3e}"})
+        pbar.set_postfix({"Loss": f"{loss:.3e}"})
 
     # test
     test_length = length

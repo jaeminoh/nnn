@@ -1,9 +1,7 @@
 from beartype import beartype as typechecker
 from jaxtyping import ArrayLike, Float, jaxtyped
 
-
-class ObservationOperator:
-    pass
+from nnn._cores import ObservationOperator
 
 
 class UniformSubsample(ObservationOperator):

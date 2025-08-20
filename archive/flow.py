@@ -35,27 +35,42 @@ class Flow(eqx.Module):
         for t in tt[:-1]:
             x = self.step(t, x, dt)
         return x
-    
+
     def derivatives(self, t, x0, x1):
         xt = (1 - t) * x0 + t * x1
-        v, v_t = jax.jvp(lambda t: self(t, xt), (t,), (jnp.ones_like(t,),))
+        v, v_t = jax.jvp(
+            lambda t: self(t, xt),
+            (t,),
+            (
+                jnp.ones_like(
+                    t,
+                ),
+            ),
+        )
         _, vv_x = jax.jvp(lambda x: self(t, x), (xt,), (v,))
         return v, v_t + vv_x
 
-
     def _loss_pinn(self, t, x0, x1):
         x_t = (1 - t) * x0 + t * x1
-        v, v_t = jax.jvp(lambda t: self(t, x_t), (t,), (jnp.ones_like(t,),))
+        v, v_t = jax.jvp(
+            lambda t: self(t, x_t),
+            (t,),
+            (
+                jnp.ones_like(
+                    t,
+                ),
+            ),
+        )
         _, vv_x = jax.jvp(lambda x_t: self(t, x_t), (x_t,), (v,))
-        flow_matching = v - (x1 - x0) # rectified flow
-        pde = (v_t + vv_x)
+        flow_matching = v - (x1 - x0)  # rectified flow
+        pde = v_t + vv_x
         return flow_matching, pde
 
     def _loss(self, t, x_0, x_1):
         x_t = (1 - t) * x_0 + t * x_1
         v = self(t, x_t)
         return v - (x_1 - x_0)
-    
+
 
 def loss_pinn(vf, xx_1, key):
     key1, key2 = jr.split(key)
@@ -66,6 +81,7 @@ def loss_pinn(vf, xx_1, key):
     loss_pde = (pde**2).mean()
     return loss_matching + 1e-2 * loss_pde
 
+
 def pinn_guided_loss(vf, xx1, key):
     key1, key2 = jr.split(key)
     tt = jr.uniform(key1, (xx1.shape[0],))
@@ -74,6 +90,7 @@ def pinn_guided_loss(vf, xx1, key):
     flow_matching = jax.vmap(vf._loss)(tt, xx0, xx1)
     return (flow_matching**2).mean() + 1e-2 * (pde**2).mean()
 
+
 def loss(vf, xx_1, key):
     key1, key2 = jr.split(key)
     tt = jr.uniform(key1, shape=(xx_1.shape[0],))
@@ -81,7 +98,8 @@ def loss(vf, xx_1, key):
     flow_matching = jax.vmap(vf._loss)(tt, xx_0, xx_1)
     return (flow_matching**2).mean()
 
-def train(opt: optax.GradientTransformation, xx_1, epoch:int, mode: str):
+
+def train(opt: optax.GradientTransformation, xx_1, epoch: int, mode: str):
     vf = Flow(dim=1)
     if "pinn" in mode:
         opt = jaxopt.OptaxSolver(loss_pinn, opt=opt)
@@ -89,17 +107,17 @@ def train(opt: optax.GradientTransformation, xx_1, epoch:int, mode: str):
         opt = jaxopt.OptaxSolver(loss, opt=opt)
     elif "guide" in mode:
         opt = jaxopt.OptaxSolver(pinn_guided_loss, opt=opt)
-    
+
     key, subkey = jr.split(jr.key(0))
     state = opt.init_state(vf, xx_1, subkey)
-    
+
     @jax.jit
     def step(vf, state, key):
         key, subkey = jr.split(key)
         vf, state = opt.update(vf, state, xx_1, subkey)
         return vf, state, key
 
-    for it in (pbar:=trange(epoch)):
+    for it in (pbar := trange(epoch)):
         vf, state, key = step(vf, state, key)
         pbar.set_postfix({"loss": f"{state.value:.3e}"})
     print("Done!")

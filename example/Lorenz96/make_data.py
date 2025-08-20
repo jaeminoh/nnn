@@ -4,23 +4,22 @@ import diffrax as dfx
 import jax
 import numpy as np
 
-from nnn.models import Lorenz96
-
-jax.config.update("jax_enable_x64", True)
-jax.config.update("jax_platform_name", "cpu")
+from nnn.equations import Lorenz96
 
 
 def main(Nx: int = 40, draw_plot: bool = False, forcing: float = 8):
     """
     A numerical solver of Lorenz 96 model
     """
+    jax.config.update("jax_enable_x64", True)
+    jax.config.update("jax_platform_name", "cpu")
+    path = "data/Lorenz96"
+    if not os.path.isdir(path):
+        os.makedirs(path)
     print(f"""Generate L96 data.
           check precision: {jax.numpy.ones(()).dtype}
           Nx: {Nx}, draw plot: {draw_plot}, forcing: {forcing}""")
-    if not os.path.isdir("data"):
-        print("no data directory, create one")
-        os.mkdir("data")
-    
+
     # initial condition
     u0 = np.ones((Nx,)) * forcing
     u0[0] += 0.01
@@ -48,7 +47,7 @@ def main(Nx: int = 40, draw_plot: bool = False, forcing: float = 8):
         )
         uu = sol.ys
         return uu
-    
+
     # solve RK4
     def solve_rk4(u0):
         uu = [u0]
@@ -60,8 +59,8 @@ def main(Nx: int = 40, draw_plot: bool = False, forcing: float = 8):
 
     uu = solve_rk4(u0)
 
-    np.savez("data/train.npz", tt=tt[80:-400], sol=uu[80:-400])
-    np.savez("data/test.npz", tt=tt[-401:], sol=uu[-401:])
+    np.savez(f"{path}/train.npz", tt=tt[80:-400], sol=uu[80:-400])
+    np.savez(f"{path}/test.npz", tt=tt[-401:], sol=uu[-401:])
     print(f"train data shape: {uu[80:-400].shape}")
     print(f"test data shape: {uu[-401:].shape}")
 
@@ -79,7 +78,7 @@ def main(Nx: int = 40, draw_plot: bool = False, forcing: float = 8):
         plt.ylabel(r"$t$")
         plt.colorbar()
         plt.tight_layout()
-        plt.savefig("data/lorenz96.pdf", format="pdf")
+        plt.savefig(f"{path}/lorenz96.pdf", format="pdf")
 
 
 if __name__ == "__main__":

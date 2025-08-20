@@ -21,7 +21,7 @@ class Solution:
 
     def save(self, fname: str):
         np.savez(
-            f"data/{fname}",
+            f"{fname}",
             tt=self.tt,
             uu=self.reference,
             uu_f=self.baseline,
@@ -41,8 +41,10 @@ class DataLoader:
     - `yy`: simulated noisy observation, by adding Gaussian noise to `uu_ref`.
     """
 
-    def __init__(self, observe: ObservationOperator, noise_level: float = 0.364):
-        
+    def __init__(
+        self, path: str, observe: ObservationOperator, noise_level: float = 0.364
+    ):
+        self.path = path
         self.observe = observe
         self.noise_level = noise_level
 
@@ -52,7 +54,7 @@ class DataLoader:
     ) -> tuple[
         Float[ArrayLike, " ens *Nx"],
         Float[ArrayLike, " ens {unroll_length} *Nx"],
-        Float[ArrayLike, " ens {unroll_length} *No"]
+        Float[ArrayLike, " ens {unroll_length} *No"],
     ]:
         """
         Load a single long time series as an *ensemble* of short time series.
@@ -64,7 +66,7 @@ class DataLoader:
         The chunks are then stacked and regarded as an ensemble.
         """
         np.random.seed(seed)
-        d = np.load("data/train.npz")
+        d = np.load(f"{self.path}/train.npz")
         # tt = d["tt"]
         uu = d["sol"]
         del d
@@ -85,7 +87,9 @@ class DataLoader:
         assert np.allclose(u0[1:], uu_ref[:-1, -1]), "index error!"
 
         u0 = _add_noise(u0, noise_level=self.noise_level)
-        yy = _add_noise(jax.vmap(jax.vmap(self.observe))(uu_ref), noise_level=self.noise_level)
+        yy = _add_noise(
+            jax.vmap(jax.vmap(self.observe))(uu_ref), noise_level=self.noise_level
+        )
 
         if max_ens_size:
             u0 = u0[:max_ens_size]
@@ -95,7 +99,7 @@ class DataLoader:
 
     def load_test(self, fname: str, unroll_length: int, seed: int = 1):
         np.random.seed(seed)
-        d = np.load(fname)
+        d = np.load(f"{fname}.npz")
         tt = d["tt"][: unroll_length + 1]
         uu = d["sol"]
         del d
@@ -105,5 +109,5 @@ class DataLoader:
         return tt, u0, uu, yy
 
 
-def _add_noise(target, noise_level: float = 0.364):
+def _add_noise(target: ArrayLike, noise_level: float = 0.364):
     return target + noise_level * np.random.randn(*target.shape)

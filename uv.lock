@@ -750,6 +750,47 @@ wheels = [
 ]
 
 [[package]]
+name = "nnn"
+version = "0.1.0"
+source = { editable = "." }
+dependencies = [
+    { name = "beartype" },
+    { name = "diffrax" },
+    { name = "equinox" },
+    { name = "fire" },
+    { name = "ipykernel" },
+    { name = "jax", extra = ["cuda"] },
+    { name = "jax-cfd" },
+    { name = "jaxopt" },
+    { name = "matplotlib" },
+    { name = "optax" },
+    { name = "pre-commit" },
+    { name = "ruff" },
+    { name = "seaborn" },
+    { name = "tqdm" },
+    { name = "xarray" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "beartype", specifier = ">=0.20.2" },
+    { name = "diffrax", specifier = ">=0.7.0" },
+    { name = "equinox", specifier = ">=0.11.12" },
+    { name = "fire", specifier = ">=0.7.0" },
+    { name = "ipykernel", specifier = ">=6.29.5" },
+    { name = "jax", extras = ["cuda"], specifier = "==0.5.0" },
+    { name = "jax-cfd", specifier = ">=0.2.1" },
+    { name = "jaxopt", specifier = ">=0.8.3" },
+    { name = "matplotlib", specifier = ">=3.10.1" },
+    { name = "optax", specifier = ">=0.2.4" },
+    { name = "pre-commit", specifier = ">=4.2.0" },
+    { name = "ruff", specifier = ">=0.11.5" },
+    { name = "seaborn", specifier = ">=0.13.2" },
+    { name = "tqdm", specifier = ">=4.67.1" },
+    { name = "xarray", specifier = ">=2025.4.0" },
+]
+
+[[package]]
 name = "nodeenv"
 version = "1.9.1"
 source = { registry = "https://pypi.org/simple" }
@@ -917,47 +958,6 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/f6/74/86a07f1d0f42998ca31312f998bd3b9a7eff7f52378f4f270c8679c77fb9/nvidia_nvjitlink_cu12-12.8.93-py3-none-manylinux2010_x86_64.manylinux_2_12_x86_64.whl", hash = "sha256:81ff63371a7ebd6e6451970684f916be2eab07321b73c9d244dc2b4da7f73b88", size = 39254836, upload-time = "2025-03-07T01:49:55.661Z" },
     { url = "https://files.pythonhosted.org/packages/2a/a2/8cee5da30d13430e87bf99bb33455d2724d0a4a9cb5d7926d80ccb96d008/nvidia_nvjitlink_cu12-12.8.93-py3-none-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:adccd7161ace7261e01bb91e44e88da350895c270d23f744f0820c818b7229e7", size = 38386204, upload-time = "2025-03-07T01:49:43.612Z" },
     { url = "https://files.pythonhosted.org/packages/ed/d7/34f02dad2e30c31b10a51f6b04e025e5dd60e5f936af9045a9b858a05383/nvidia_nvjitlink_cu12-12.8.93-py3-none-win_amd64.whl", hash = "sha256:bd93fbeeee850917903583587f4fc3a4eafa022e34572251368238ab5e6bd67f", size = 268553710, upload-time = "2025-03-07T01:56:24.13Z" },
-]
-
-[[package]]
-name = "oda"
-version = "0.0.1"
-source = { virtual = "." }
-dependencies = [
-    { name = "beartype" },
-    { name = "diffrax" },
-    { name = "equinox" },
-    { name = "fire" },
-    { name = "ipykernel" },
-    { name = "jax", extra = ["cuda"] },
-    { name = "jax-cfd" },
-    { name = "jaxopt" },
-    { name = "matplotlib" },
-    { name = "optax" },
-    { name = "pre-commit" },
-    { name = "ruff" },
-    { name = "seaborn" },
-    { name = "tqdm" },
-    { name = "xarray" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "beartype", specifier = ">=0.20.2" },
-    { name = "diffrax", specifier = ">=0.7.0" },
-    { name = "equinox", specifier = ">=0.11.12" },
-    { name = "fire", specifier = ">=0.7.0" },
-    { name = "ipykernel", specifier = ">=6.29.5" },
-    { name = "jax", extras = ["cuda"], specifier = "==0.5.0" },
-    { name = "jax-cfd", specifier = ">=0.2.1" },
-    { name = "jaxopt", specifier = ">=0.8.3" },
-    { name = "matplotlib", specifier = ">=3.10.1" },
-    { name = "optax", specifier = ">=0.2.4" },
-    { name = "pre-commit", specifier = ">=4.2.0" },
-    { name = "ruff", specifier = ">=0.11.5" },
-    { name = "seaborn", specifier = ">=0.13.2" },
-    { name = "tqdm", specifier = ">=4.67.1" },
-    { name = "xarray", specifier = ">=2025.4.0" },
 ]
 
 [[package]]
