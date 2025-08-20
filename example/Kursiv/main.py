@@ -16,7 +16,7 @@ def main(
         epoch: int = 300,
         include_training: bool = True,
         unroll_length: int = 10,
-        inner_steps: int = 50,
+        inner_steps: int = 10,
         method: str = "forward_euler",
 ):
     fname = f"Kursiv_{filter_type}_Noise{noise_level}Obs{sensor_every}Rank{rank}"

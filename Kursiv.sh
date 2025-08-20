@@ -9,16 +9,19 @@ epoch=300
 
 cd example/Kursiv
 noises=(0.25 0.375 0.5)
-method="forward_euler" #"etdrk4"
-inner_step=25 #10
+method="etdrk4"
+inner_step=10
 
 
 python make_data.py
-for noise in "${noises[@]}"
+for noise in 0.25 0.375 0.5
 do
     for sensor_every in 1 2 4
     do
-    python main.py --filter_type=$filter_type --method=$method --inner_steps=$inner_step \
-    --sensor_every=$sensor_every  --noise_level=$noise --include_training=True --epoch=$epoch
+        for filter_type in "linear" "nonlinear"
+        do
+            python main.py --filter_type=$filter_type --method=$method \
+            --sensor_every=$sensor_every  --noise_level=$noise --include_training=True
+        done
     done
 done
